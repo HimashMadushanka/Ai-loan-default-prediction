@@ -8,3 +8,7 @@ seaborn
 streamlit
 shap
 pytest
+fastapi
+uvicorn
+requests
+sqlalchemy
