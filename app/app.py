@@ -10,7 +10,7 @@ PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
 )
 
-sys.path.append(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
 
 
 # --------------------------------------------------
@@ -19,7 +19,8 @@ sys.path.append(PROJECT_ROOT)
 
 from src.prediction import (
     load_model,
-    predict_loan_risk
+    predict_loan_risk,
+    explain_prediction
 )
 
 
@@ -186,6 +187,17 @@ if predict_button:
         probability = result["default_probability"]
         risk_level = result["risk_level"]
 
+        explanation = explain_prediction(
+            model=model,
+            age=age,
+            income=income,
+            employment_years=employment_years,
+            home_ownership=home_ownership,
+            loan_amount=loan_amount,
+            loan_purpose=loan_purpose,
+            credit_history_years=credit_history_years
+        )
+
 
         # --------------------------------------------------
         # Display results
@@ -242,6 +254,36 @@ if predict_button:
         st.progress(
             float(probability)
         )
+
+
+        # --------------------------------------------------
+        # Decision explanation and applicant guidance
+        # --------------------------------------------------
+
+        st.subheader("🧭 Decision Explanation")
+
+        if explanation["reason_codes"]:
+            st.write("**Main factors identified:**")
+            for reason in explanation["reason_codes"]:
+                st.write(f"- {reason.capitalize()}")
+        else:
+            st.write("No specific risk warning was identified from the guidance rules.")
+
+        st.write("**Possible next steps:**")
+        for recommendation in explanation["recommendations"]:
+            st.write(f"- {recommendation}")
+
+        st.caption(
+            "These are guidance points, not a guarantee of approval. "
+            "A qualified loan officer should review declined or borderline applications."
+        )
+
+        with st.expander("View model explanation"):
+            st.dataframe(
+                explanation["feature_explanations"],
+                hide_index=True,
+                use_container_width=True
+            )
 
 
         # --------------------------------------------------
