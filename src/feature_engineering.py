@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 
 FEATURES = [
@@ -12,6 +13,7 @@ FEATURES = [
 ]
 
 TARGET = "default"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def create_model_data(df):
@@ -26,7 +28,7 @@ def create_model_data(df):
 
 def save_model_data(
     model_df,
-    file_path="../data/processed/model_data.csv"
+    file_path=PROJECT_ROOT / "data" / "processed" / "model_data.csv"
 ):
     """
     Save model-ready dataset.
@@ -42,9 +44,7 @@ def save_model_data(
 
 if __name__ == "__main__":
 
-    cleaned_data_path = (
-        "../data/processed/cleaned_data.csv"
-    )
+    cleaned_data_path = PROJECT_ROOT / "data" / "processed" / "cleaned_data.csv"
 
     df = pd.read_csv(cleaned_data_path)
 

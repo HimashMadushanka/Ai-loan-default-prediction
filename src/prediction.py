@@ -1,9 +1,11 @@
 import pandas as pd
 import joblib
 import shap
+from pathlib import Path
 
 
-MODEL_PATH = "../models/best_model.pkl"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_PATH = PROJECT_ROOT / "models" / "best_model.pkl"
 
 VALID_HOME_OWNERSHIP = {
     "RENT",
@@ -254,6 +256,24 @@ def build_recommendations(
     return list(dict.fromkeys(recommendations))
 
 
+def recommend_max_loan_amount(income, employment_years, risk_level):
+    """Estimate a conservative maximum loan amount for screening purposes."""
+
+    annual_income = float(income)
+    years_employed = float(employment_years)
+
+    income_multiplier = {
+        "Low Risk": 0.30,
+        "Medium Risk": 0.20,
+        "High Risk": 0.10
+    }[risk_level]
+
+    employment_factor = 0.75 if years_employed < 2 else 1.0
+    recommended_amount = annual_income * income_multiplier * employment_factor
+
+    return round(max(recommended_amount, 0), 2)
+
+
 def predict_loan_risk(
     model,
     age,
@@ -316,7 +336,12 @@ def predict_loan_risk(
     return {
         "prediction": result,
         "default_probability": probability,
-        "risk_level": risk_level
+        "risk_level": risk_level,
+        "recommended_max_loan_amount": recommend_max_loan_amount(
+            income=income,
+            employment_years=employment_years,
+            risk_level=risk_level
+        )
     }
 
 

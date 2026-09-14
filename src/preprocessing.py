@@ -1,9 +1,11 @@
 import pandas as pd
+from pathlib import Path
 
 
 # File paths
-RAW_DATA_PATH = "../data/raw/credit_risk_dataset.csv"
-CLEANED_DATA_PATH = "../data/processed/cleaned_data.csv"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+RAW_DATA_PATH = PROJECT_ROOT / "data" / "row" / "credit_risk_dataset.csv"
+CLEANED_DATA_PATH = PROJECT_ROOT / "data" / "processed" / "cleaned_data.csv"
 
 
 def load_data(file_path=RAW_DATA_PATH):

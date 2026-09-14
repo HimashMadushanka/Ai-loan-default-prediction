@@ -34,6 +34,15 @@ st.set_page_config(
     layout="centered"
 )
 
+if "workflow_step" not in st.session_state:
+    st.session_state.workflow_step = "prediction"
+if "loan_result" not in st.session_state:
+    st.session_state.loan_result = None
+if "loan_explanation" not in st.session_state:
+    st.session_state.loan_explanation = None
+if "approved_currency" not in st.session_state:
+    st.session_state.approved_currency = "USD"
+
 
 # --------------------------------------------------
 # Load trained model
@@ -71,6 +80,17 @@ st.divider()
 
 st.subheader("👤 Applicant Information")
 
+currency_code = st.selectbox(
+    "Currency",
+    options=[
+        "USD",
+        "EUR",
+        "GBP",
+        "INR",
+        "LKR"
+    ]
+)
+
 age = st.number_input(
     "Age",
     min_value=18,
@@ -80,7 +100,7 @@ age = st.number_input(
 )
 
 income = st.number_input(
-    "Annual Income",
+    f"Annual Income ({currency_code})",
     min_value=0.0,
     value=50000.0,
     step=1000.0
@@ -112,7 +132,7 @@ home_ownership = st.selectbox(
 st.subheader("🏦 Loan Information")
 
 loan_amount = st.number_input(
-    "Loan Amount",
+    f"Loan Amount ({currency_code})",
     min_value=0.0,
     value=10000.0,
     step=500.0
@@ -198,6 +218,15 @@ if predict_button:
             credit_history_years=credit_history_years
         )
 
+        st.session_state.loan_result = result
+        st.session_state.loan_explanation = explanation
+        st.session_state.approved_currency = currency_code
+
+        if prediction != "Default":
+            st.session_state.workflow_step = "documents"
+        else:
+            st.session_state.workflow_step = "prediction"
+
 
         # --------------------------------------------------
         # Display results
@@ -223,6 +252,16 @@ if predict_button:
         st.metric(
             label="Default Probability",
             value=f"{probability:.2%}"
+        )
+
+        st.metric(
+            label="Recommended Maximum Loan Amount",
+            value=f"{currency_code} {result['recommended_max_loan_amount']:,.2f}"
+        )
+
+        st.caption(
+            "Screening estimate based on income, employment stability, and model risk. "
+            "It is not a final lending limit. Amounts use the selected currency code."
         )
 
 
@@ -297,7 +336,7 @@ if predict_button:
         with col1:
 
             st.write(f"**Age:** {age}")
-            st.write(f"**Annual Income:** ${income:,.2f}")
+            st.write(f"**Annual Income:** {currency_code} {income:,.2f}")
             st.write(
                 f"**Employment Years:** "
                 f"{employment_years}"
@@ -311,7 +350,7 @@ if predict_button:
 
             st.write(
                 f"**Loan Amount:** "
-                f"${loan_amount:,.2f}"
+                f"{currency_code} {loan_amount:,.2f}"
             )
 
             st.write(
@@ -338,4 +377,81 @@ if predict_button:
             be used as the sole basis for making lending
             or financial decisions.
             """
+        )
+
+
+# --------------------------------------------------
+# Loan approval and document workflow
+# --------------------------------------------------
+
+if st.session_state.loan_result is not None:
+    st.divider()
+    st.subheader("🛡️ Banker Workflow")
+
+    if st.session_state.workflow_step == "prediction":
+        st.info("Review the prediction and approve the loan to continue to document verification.")
+        if st.button("✅ Approve Loan and Continue", use_container_width=True):
+            st.session_state.workflow_step = "documents"
+            st.rerun()
+
+    elif st.session_state.workflow_step == "documents":
+        st.success("Loan approved. Upload all required documents for verification.")
+        st.write("Required documents")
+
+        identity_document = st.file_uploader(
+            "Identity document",
+            type=["pdf", "png", "jpg", "jpeg"],
+            key="identity_document"
+        )
+        income_document = st.file_uploader(
+            "Income or employment proof",
+            type=["pdf", "png", "jpg", "jpeg"],
+            key="income_document"
+        )
+        bank_statement = st.file_uploader(
+            "Bank statement",
+            type=["pdf", "png", "jpg", "jpeg"],
+            key="bank_statement"
+        )
+
+        documents = {
+            "Identity document": identity_document,
+            "Income or employment proof": income_document,
+            "Bank statement": bank_statement
+        }
+        missing_documents = [
+            name for name, document in documents.items()
+            if document is None
+        ]
+
+        if missing_documents:
+            st.warning(
+                "Missing documents: " + ", ".join(missing_documents)
+            )
+        else:
+            invalid_documents = [
+                name for name, document in documents.items()
+                if document.size <= 0
+            ]
+
+            if invalid_documents:
+                st.error(
+                    "These documents are empty: " + ", ".join(invalid_documents)
+                )
+            else:
+                st.success("All required documents are uploaded and non-empty.")
+                st.caption(
+                    "This is a completeness check only. A qualified banker must "
+                    "verify authenticity and whether the documents match the application."
+                )
+                if st.button("📤 Submit Documents", use_container_width=True):
+                    st.session_state.workflow_step = "completed"
+                    st.rerun()
+
+    else:
+        st.success("🎉 All steps completed.")
+        st.write("Loan approval and document completeness checks are finished.")
+        st.caption(
+            "Final disbursement remains subject to the bank's approval, compliance, "
+            "and document-authentication procedures."
         )
