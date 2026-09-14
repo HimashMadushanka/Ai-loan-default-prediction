@@ -12,3 +12,7 @@ fastapi
 uvicorn
 requests
 sqlalchemy
+python-dotenv
+mysql-connector-python
+plotly
+httpx

@@ -226,10 +226,14 @@ if page == "MLOps Dashboard":
     """, unsafe_allow_html=True)
 
     try:
+        from dotenv import load_dotenv
+        load_dotenv()
         conn = mysql.connector.connect(
-            host="127.0.0.1", port=3306,
-            user="root", password="",
-            database="loan_system"
+            host=os.getenv("DB_HOST", "127.0.0.1"),
+            port=int(os.getenv("DB_PORT", "3306")),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database=os.getenv("DB_NAME", "loan_system")
         )
         df = pd.read_sql_query("SELECT * FROM prediction_logs ORDER BY timestamp DESC", conn)
         conn.close()
@@ -240,8 +244,6 @@ if page == "MLOps Dashboard":
 
         import plotly.express as px
         import plotly.graph_objects as go
-        from plotly.subplots import make_subplots
-        import numpy as np
 
         # ── Computed Metrics ──
         total = len(df)
@@ -255,9 +257,6 @@ if page == "MLOps Dashboard":
 
         # ── Color Palette ──
         RISK_COLORS = {"Low Risk": "#4ade80", "Medium Risk": "#fbbf24", "High Risk": "#f87171"}
-        PRED_COLORS = {"Non-Default": "#4ade80", "Default": "#f87171"}
-        GRADIENT_BLUE = [[0, "#1e3a5f"], [0.5, "#3b82f6"], [1, "#93c5fd"]]
-        GRADIENT_PURPLE = [[0, "#3b0764"], [0.5, "#7c3aed"], [1, "#c4b5fd"]]
 
         dark_layout = dict(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -313,20 +312,19 @@ if page == "MLOps Dashboard":
         """, unsafe_allow_html=True)
 
         # ==================================================
-        # SECTION 1 — Risk Intelligence
+        # CHART 1 — Risk Distribution (Full Width)
         # ==================================================
         st.markdown("""
         <div class="dash-section">
             <div class="sec-icon purple">🛡️</div>
-            <div><h3>Risk Intelligence</h3><p>Model confidence and risk distribution</p></div>
+            <div><h3>Risk Distribution</h3><p>Breakdown of applicant risk levels</p></div>
         </div>
         """, unsafe_allow_html=True)
 
-        s1c1, s1c2, s1c3 = st.columns([1, 1, 1])
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        ch1_left, ch1_right = st.columns([2, 3])
 
-        # ── 1A: Risk Donut ──
-        with s1c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        with ch1_left:
             risk_counts = df['risk_level'].value_counts().reset_index()
             risk_counts.columns = ['Risk Level', 'Count']
             colors = [RISK_COLORS.get(r, "#60a5fa") for r in risk_counts['Risk Level']]
@@ -334,447 +332,227 @@ if page == "MLOps Dashboard":
             fig = go.Figure(data=[go.Pie(
                 labels=risk_counts['Risk Level'],
                 values=risk_counts['Count'],
-                hole=0.6,
-                marker=dict(colors=colors, line=dict(color="#0f172a", width=2)),
-                textinfo='label+percent',
-                textfont=dict(size=12, color="#e2e8f0"),
+                hole=0.55,
+                marker=dict(colors=colors, line=dict(color="#0f172a", width=3)),
+                textinfo='label+percent+value',
+                textfont=dict(size=15, color="#e2e8f0", family="Inter"),
+                textposition='outside',
+                pull=[0.03] * len(risk_counts),
                 hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>"
             )])
             fig.update_layout(
-                title=dict(text="Risk Distribution", font=dict(size=15, color="#e2e8f0")),
-                showlegend=False, **dark_layout
+                showlegend=False, height=380,
+                margin=dict(l=20, r=20, t=20, b=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter, sans-serif", color="#cbd5e1"),
+                hoverlabel=dict(bgcolor="#1e293b", font_size=14, font_color="#e2e8f0")
             )
-            fig.add_annotation(text=f"<b>{total}</b><br><span style='font-size:11px;color:#94a3b8'>Total</span>",
-                               x=0.5, y=0.5, showarrow=False, font=dict(size=22, color="#e2e8f0"))
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 1B: Risk Gauge ──
-        with s1c2:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number+delta",
-                value=avg_prob * 100,
-                number=dict(suffix="%", font=dict(size=36, color="#e2e8f0")),
-                title=dict(text="Model Risk Score", font=dict(size=15, color="#e2e8f0")),
-                gauge=dict(
-                    axis=dict(range=[0, 100], tickcolor="#475569", dtick=20,
-                              tickfont=dict(color="#94a3b8")),
-                    bar=dict(color="#8b5cf6", thickness=0.3),
-                    bgcolor="rgba(0,0,0,0)",
-                    borderwidth=0,
-                    steps=[
-                        dict(range=[0, 30], color="rgba(74,222,128,0.15)"),
-                        dict(range=[30, 60], color="rgba(251,191,36,0.15)"),
-                        dict(range=[60, 100], color="rgba(248,113,113,0.15)")
-                    ],
-                    threshold=dict(line=dict(color="#f87171", width=3), thickness=0.8, value=60)
-                )
-            ))
-            fig.update_layout(height=310, **dark_layout)
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 1C: Prediction Outcome ──
-        with s1c3:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            pred_counts = df['prediction'].value_counts().reset_index()
-            pred_counts.columns = ['Prediction', 'Count']
-            p_colors = [PRED_COLORS.get(p, "#60a5fa") for p in pred_counts['Prediction']]
-
-            fig = go.Figure(data=[go.Bar(
-                x=pred_counts['Prediction'], y=pred_counts['Count'],
-                marker=dict(color=p_colors,
-                            line=dict(color="rgba(255,255,255,0.1)", width=1),
-                            cornerradius=6),
-                text=pred_counts['Count'], textposition='outside',
-                textfont=dict(color="#e2e8f0", size=16, family="Inter"),
-                width=0.5
-            )])
-            fig.update_layout(
-                title=dict(text="Prediction Outcomes", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(showgrid=False, tickfont=dict(size=13)),
-                yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", title=""),
-                **dark_layout
+            fig.add_annotation(
+                text=f"<b style='font-size:28px'>{total}</b><br><span style='font-size:13px;color:#94a3b8'>Total</span>",
+                x=0.5, y=0.5, showarrow=False, font=dict(size=28, color="#e2e8f0")
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+
+        with ch1_right:
+            # Summary table for risk levels
+            for _, row in risk_counts.iterrows():
+                level = row['Risk Level']
+                count = row['Count']
+                pct = count / total * 100
+                color = RISK_COLORS.get(level, "#60a5fa")
+                st.markdown(f"""
+                <div style="
+                    display:flex; align-items:center; gap:14px;
+                    padding:14px 20px; margin-bottom:10px;
+                    background:rgba(30,41,59,0.6);
+                    border-left:4px solid {color};
+                    border-radius:10px;
+                ">
+                    <div style="font-size:32px;font-weight:800;color:{color};min-width:60px">{count}</div>
+                    <div>
+                        <div style="color:#e2e8f0;font-size:16px;font-weight:600">{level}</div>
+                        <div style="color:#94a3b8;font-size:13px">{pct:.1f}% of all applications</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Approval vs Default summary
+            st.markdown(f"""
+            <div style="
+                display:flex; gap:12px; margin-top:6px;
+            ">
+                <div style="flex:1;text-align:center;padding:12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px">
+                    <div style="color:#4ade80;font-size:24px;font-weight:800">{non_default_count}</div>
+                    <div style="color:#94a3b8;font-size:12px">Approved</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:12px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:10px">
+                    <div style="color:#f87171;font-size:24px;font-weight:800">{default_count}</div>
+                    <div style="color:#94a3b8;font-size:12px">Defaulted</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # ==================================================
-        # SECTION 2 — Probability & Financial Analysis
+        # CHART 2 — Loans by Purpose (Full Width)
         # ==================================================
         st.markdown("""
         <div class="dash-section">
-            <div class="sec-icon blue">💹</div>
-            <div><h3>Probability & Financial Analysis</h3><p>Default probability patterns and loan insights</p></div>
+            <div class="sec-icon blue">🏦</div>
+            <div><h3>Loan Purpose Analysis</h3><p>Application volume and average risk per loan category</p></div>
         </div>
         """, unsafe_allow_html=True)
 
-        s2c1, s2c2 = st.columns(2)
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        purpose = df.groupby('loan_purpose').agg(
+            count=('id', 'count'),
+            avg_amount=('loan_amount', 'mean'),
+            avg_prob=('default_probability', 'mean')
+        ).reset_index().sort_values('count', ascending=True)
 
-        # ── 2A: Probability Distribution ──
-        with s2c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = go.Figure()
-            for risk in ["Low Risk", "Medium Risk", "High Risk"]:
-                rdf = df[df['risk_level'] == risk]
-                if not rdf.empty:
-                    fig.add_trace(go.Histogram(
-                        x=rdf['default_probability'], name=risk,
-                        marker_color=RISK_COLORS.get(risk), opacity=0.7,
-                        nbinsx=15,
-                        hovertemplate=f"{risk}<br>Prob: %{{x:.2%}}<br>Count: %{{y}}<extra></extra>"
-                    ))
-            fig.add_vline(x=avg_prob, line_dash="dot", line_color="#a78bfa", line_width=2,
-                          annotation_text=f"  Avg: {avg_prob:.2%}",
-                          annotation_font=dict(color="#a78bfa", size=12))
-            fig.update_layout(
-                title=dict(text="Default Probability Distribution", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(title="Default Probability", tickformat=".0%", showgrid=False),
-                yaxis=dict(title="Frequency", showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                barmode="overlay", **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=purpose['loan_purpose'], x=purpose['count'],
+            orientation='h',
+            marker=dict(
+                color=purpose['avg_prob'],
+                colorscale=[[0, "#4ade80"], [0.5, "#fbbf24"], [1, "#f87171"]],
+                colorbar=dict(
+                    title=dict(text="Avg Default<br>Probability", font=dict(size=12, color="#94a3b8")),
+                    tickformat=".0%", tickfont=dict(color="#94a3b8", size=12),
+                    len=0.6, thickness=14
+                ),
+                cornerradius=6,
+                line=dict(color="rgba(255,255,255,0.15)", width=1)
+            ),
+            text=[f"  {c} apps  ·  Avg ${a:,.0f}  ·  Risk {p:.0%}" for c, a, p in
+                  zip(purpose['count'], purpose['avg_amount'], purpose['avg_prob'])],
+            textposition='outside',
+            textfont=dict(color="#e2e8f0", size=13, family="Inter")
+        ))
+        fig.update_layout(
+            xaxis=dict(title=dict(text="Number of Applications", font=dict(size=13, color="#94a3b8")),
+                       showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+                       tickfont=dict(size=12, color="#94a3b8")),
+            yaxis=dict(title="", tickfont=dict(size=14, color="#e2e8f0")),
+            height=max(280, len(purpose) * 55 + 80),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Inter, sans-serif", color="#cbd5e1"),
+            margin=dict(l=160, r=40, t=20, b=50),
+            hoverlabel=dict(bgcolor="#1e293b", font_size=13, font_color="#e2e8f0")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # ── 2B: Loan Purpose Breakdown ──
-        with s2c2:
+        # ==================================================
+        # CHART 3 — Predictions Over Time (Full Width)
+        # ==================================================
+        if 'timestamp' in df.columns and not df['timestamp'].isna().all():
+            st.markdown("""
+            <div class="dash-section">
+                <div class="sec-icon green">📈</div>
+                <div><h3>Predictions Over Time</h3><p>Daily volume of approved vs defaulted predictions</p></div>
+            </div>
+            """, unsafe_allow_html=True)
+
             st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            purpose = df.groupby('loan_purpose').agg(
-                count=('id', 'count'),
-                avg_amount=('loan_amount', 'mean'),
+            dft = df.copy()
+            dft['timestamp'] = pd.to_datetime(dft['timestamp'])
+            dft['date'] = dft['timestamp'].dt.date
+            daily = dft.groupby('date').agg(
+                total=('id', 'count'),
+                defaults=('prediction', lambda x: (x == 'Default').sum()),
                 avg_prob=('default_probability', 'mean')
-            ).reset_index().sort_values('count', ascending=True)
+            ).reset_index()
+            daily['date'] = pd.to_datetime(daily['date'])
+            daily['approved'] = daily['total'] - daily['defaults']
 
             fig = go.Figure()
-            fig.add_trace(go.Bar(
-                y=purpose['loan_purpose'], x=purpose['count'],
-                orientation='h', name='Applications',
-                marker=dict(color=purpose['avg_prob'],
-                            colorscale=[[0, "#4ade80"], [0.5, "#fbbf24"], [1, "#f87171"]],
-                            colorbar=dict(title=dict(text="Avg Risk", font=dict(size=11, color="#94a3b8")),
-                                          tickformat=".0%", tickfont=dict(color="#94a3b8")),
-                            cornerradius=4,
-                            line=dict(color="rgba(255,255,255,0.1)", width=1)),
-                text=[f" {c}  |  avg ${a:,.0f}" for c, a in zip(purpose['count'], purpose['avg_amount'])],
-                textposition='outside', textfont=dict(color="#cbd5e1", size=11)
+            fig.add_trace(go.Scatter(
+                x=daily['date'], y=daily['approved'],
+                name='Approved', mode='lines+markers',
+                line=dict(color="#4ade80", width=3, shape='spline'),
+                marker=dict(size=10, symbol="circle", line=dict(width=2, color="#0f172a")),
+                fill='tozeroy', fillcolor="rgba(74,222,128,0.08)",
+                hovertemplate="<b>%{x|%b %d}</b><br>Approved: %{y}<extra></extra>"
+            ))
+            fig.add_trace(go.Scatter(
+                x=daily['date'], y=daily['defaults'],
+                name='Defaults', mode='lines+markers',
+                line=dict(color="#f87171", width=3, shape='spline'),
+                marker=dict(size=10, symbol="diamond", line=dict(width=2, color="#0f172a")),
+                fill='tozeroy', fillcolor="rgba(248,113,113,0.08)",
+                hovertemplate="<b>%{x|%b %d}</b><br>Defaults: %{y}<extra></extra>"
             ))
             fig.update_layout(
-                title=dict(text="Loans by Purpose (colored by risk)", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(title="Count", showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                yaxis=dict(title=""), **dark_layout
+                xaxis=dict(showgrid=False, tickfont=dict(size=12, color="#94a3b8"),
+                           tickformat="%b %d"),
+                yaxis=dict(title=dict(text="Count", font=dict(size=13, color="#94a3b8")),
+                           showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+                           tickfont=dict(size=12, color="#94a3b8")),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                            font=dict(size=13, color="#e2e8f0"), bgcolor="rgba(0,0,0,0)"),
+                hovermode="x unified", height=350,
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter, sans-serif", color="#cbd5e1"),
+                margin=dict(l=50, r=20, t=40, b=40),
+                hoverlabel=dict(bgcolor="#1e293b", font_size=13, font_color="#e2e8f0")
             )
             st.plotly_chart(fig, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
         # ==================================================
-        # SECTION 3 — Applicant Intelligence
-        # ==================================================
-        st.markdown("""
-        <div class="dash-section">
-            <div class="sec-icon green">👥</div>
-            <div><h3>Applicant Intelligence</h3><p>Income patterns, demographics, and risk correlations</p></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        s3c1, s3c2 = st.columns(2)
-
-        # ── 3A: Income vs Loan Scatter (bubble) ──
-        with s3c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = px.scatter(
-                df, x="income", y="loan_amount",
-                color="risk_level", size="default_probability",
-                size_max=20,
-                color_discrete_map=RISK_COLORS,
-                hover_data={"age": True, "prediction": True,
-                            "default_probability": ":.2%",
-                            "income": ":$,.0f", "loan_amount": ":$,.0f"},
-                labels={"income": "Annual Income ($)", "loan_amount": "Loan Amount ($)",
-                         "risk_level": "Risk"}
-            )
-            fig.update_traces(marker=dict(line=dict(width=1, color="rgba(255,255,255,0.2)")))
-            fig.update_layout(
-                title=dict(text="Income vs Loan Amount", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickprefix="$"),
-                yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickprefix="$"),
-                **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 3B: Box Plot — Default Prob by Risk Level ──
-        with s3c2:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = go.Figure()
-            for risk in ["Low Risk", "Medium Risk", "High Risk"]:
-                rdf = df[df['risk_level'] == risk]
-                if not rdf.empty:
-                    fig.add_trace(go.Box(
-                        y=rdf['default_probability'], name=risk,
-                        marker_color=RISK_COLORS.get(risk),
-                        boxmean='sd',
-                        line=dict(color=RISK_COLORS.get(risk)),
-                        fillcolor=RISK_COLORS.get(risk, "#60a5fa").replace(")", ",0.15)").replace("rgb", "rgba") if "rgb" in RISK_COLORS.get(risk, "") else RISK_COLORS.get(risk) + "22"
-                    ))
-            fig.update_layout(
-                title=dict(text="Default Probability by Risk Level", font=dict(size=15, color="#e2e8f0")),
-                yaxis=dict(title="Default Probability", tickformat=".0%",
-                           showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                xaxis=dict(showgrid=False),
-                showlegend=False, **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ==================================================
-        # SECTION 4 — Demographics & Patterns
+        # CHART 4 — Income vs Loan Amount (Full Width)
         # ==================================================
         st.markdown("""
         <div class="dash-section">
-            <div class="sec-icon amber">📊</div>
-            <div><h3>Demographics & Patterns</h3><p>Age, housing, and employment risk correlations</p></div>
+            <div class="sec-icon cyan">💰</div>
+            <div><h3>Income vs Loan Amount</h3><p>Financial profile of each applicant colored by risk level</p></div>
         </div>
         """, unsafe_allow_html=True)
 
-        s4c1, s4c2, s4c3 = st.columns(3)
-
-        # ── 4A: Age Distribution ──
-        with s4c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = go.Figure()
-            for risk in ["Low Risk", "Medium Risk", "High Risk"]:
-                rdf = df[df['risk_level'] == risk]
-                if not rdf.empty:
-                    fig.add_trace(go.Violin(
-                        y=rdf['age'], name=risk,
-                        line_color=RISK_COLORS.get(risk),
-                        fillcolor=RISK_COLORS.get(risk) + "33",
-                        meanline_visible=True,
-                        box_visible=True,
-                        points='all',
-                        pointpos=-0.5,
-                        jitter=0.3
-                    ))
-            fig.update_layout(
-                title=dict(text="Age Distribution", font=dict(size=15, color="#e2e8f0")),
-                yaxis=dict(title="Age", showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                showlegend=False, **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 4B: Home Ownership Stacked ──
-        with s4c2:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            home_data = df.groupby(['home_ownership', 'risk_level']).size().reset_index(name='count')
-            fig = px.bar(
-                home_data, x='home_ownership', y='count',
-                color='risk_level', color_discrete_map=RISK_COLORS,
-                barmode='stack',
-                labels={"home_ownership": "Ownership", "count": "Count", "risk_level": "Risk"}
-            )
-            fig.update_traces(marker_line=dict(width=1, color="rgba(255,255,255,0.1)"))
-            fig.update_layout(
-                title=dict(text="Housing vs Risk", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 4C: Employment Years vs Default ──
-        with s4c3:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            fig = px.scatter(
-                df, x="employment_years", y="default_probability",
-                color="prediction", color_discrete_map=PRED_COLORS,
-                size="loan_amount", size_max=18,
-                labels={"employment_years": "Employment Years",
-                         "default_probability": "Default Prob.",
-                         "prediction": "Outcome"},
-                hover_data={"income": ":$,.0f", "age": True}
-            )
-            fig.update_traces(marker=dict(line=dict(width=1, color="rgba(255,255,255,0.15)")))
-            fig.update_layout(
-                title=dict(text="Experience vs Risk", font=dict(size=15, color="#e2e8f0")),
-                xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
-                yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickformat=".0%"),
-                **dark_layout
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ==================================================
-        # SECTION 5 — Time & Correlation Analysis
-        # ==================================================
-        st.markdown("""
-        <div class="dash-section">
-            <div class="sec-icon cyan">🔬</div>
-            <div><h3>Advanced Analytics</h3><p>Temporal trends and feature correlations</p></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        s5c1, s5c2 = st.columns(2)
-
-        # ── 5A: Predictions Over Time ──
-        with s5c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            if 'timestamp' in df.columns and not df['timestamp'].isna().all():
-                dft = df.copy()
-                dft['timestamp'] = pd.to_datetime(dft['timestamp'])
-                dft['date'] = dft['timestamp'].dt.date
-                daily = dft.groupby('date').agg(
-                    total=('id', 'count'),
-                    defaults=('prediction', lambda x: (x == 'Default').sum()),
-                    avg_prob=('default_probability', 'mean')
-                ).reset_index()
-                daily['date'] = pd.to_datetime(daily['date'])
-                daily['approval'] = daily['total'] - daily['defaults']
-
-                fig = go.Figure()
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        fig = go.Figure()
+        for risk in ["Low Risk", "Medium Risk", "High Risk"]:
+            rdf = df[df['risk_level'] == risk]
+            if not rdf.empty:
                 fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['approval'],
-                    name='Approved', mode='lines+markers',
-                    line=dict(color="#4ade80", width=3),
-                    marker=dict(size=8, symbol="circle"),
-                    fill='tonexty' if len(daily) > 1 else None,
-                    stackgroup='one'
-                ))
-                fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['defaults'],
-                    name='Defaults', mode='lines+markers',
-                    line=dict(color="#f87171", width=3),
-                    marker=dict(size=8, symbol="diamond"),
-                    stackgroup='one'
-                ))
-                fig.update_layout(
-                    title=dict(text="Predictions Over Time", font=dict(size=15, color="#e2e8f0")),
-                    xaxis=dict(showgrid=False, title=""),
-                    yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", title="Count"),
-                    hovermode="x unified", **dark_layout
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("Timestamp data not available.")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 5B: Feature Correlation Heatmap ──
-        with s5c2:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            numeric_cols = ['age', 'income', 'employment_years', 'loan_amount',
-                            'credit_history_years', 'default_probability']
-            available_cols = [c for c in numeric_cols if c in df.columns]
-            if len(available_cols) >= 3:
-                corr_df = df[available_cols].corr()
-                labels = [c.replace('_', ' ').title() for c in corr_df.columns]
-
-                fig = go.Figure(data=go.Heatmap(
-                    z=corr_df.values,
-                    x=labels, y=labels,
-                    colorscale=[[0, "#4ade80"], [0.5, "#1e293b"], [1, "#f87171"]],
-                    zmid=0,
-                    text=np.round(corr_df.values, 2),
-                    texttemplate="%{text}",
-                    textfont=dict(size=12, color="#e2e8f0"),
-                    hovertemplate="%{x} vs %{y}<br>Correlation: %{z:.3f}<extra></extra>",
-                    colorbar=dict(tickfont=dict(color="#94a3b8"),
-                                  title=dict(text="r", font=dict(color="#94a3b8")))
-                ))
-                fig.update_layout(
-                    title=dict(text="Feature Correlation Matrix", font=dict(size=15, color="#e2e8f0")),
-                    xaxis=dict(tickangle=-45), **dark_layout
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("Not enough numeric features for correlation.")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ==================================================
-        # SECTION 6 — Radar & Treemap
-        # ==================================================
-        st.markdown("""
-        <div class="dash-section">
-            <div class="sec-icon purple">🧠</div>
-            <div><h3>Risk Profile & Portfolio</h3><p>Multi-dimensional risk analysis and portfolio overview</p></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        s6c1, s6c2 = st.columns(2)
-
-        # ── 6A: Radar — Avg Profile by Risk ──
-        with s6c1:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            radar_metrics = ['age', 'income', 'employment_years', 'loan_amount', 'credit_history_years']
-            available_radar = [c for c in radar_metrics if c in df.columns]
-            if len(available_radar) >= 3:
-                fig = go.Figure()
-                for risk in ["Low Risk", "Medium Risk", "High Risk"]:
-                    rdf = df[df['risk_level'] == risk]
-                    if not rdf.empty:
-                        # Normalize values to 0-1 for radar
-                        vals = []
-                        for col in available_radar:
-                            col_min = df[col].min()
-                            col_max = df[col].max()
-                            if col_max > col_min:
-                                vals.append((rdf[col].mean() - col_min) / (col_max - col_min))
-                            else:
-                                vals.append(0.5)
-                        vals.append(vals[0])  # close the polygon
-                        labels = [c.replace('_', ' ').title() for c in available_radar]
-                        labels.append(labels[0])
-
-                        fig.add_trace(go.Scatterpolar(
-                            r=vals, theta=labels, name=risk,
-                            fill='toself',
-                            fillcolor=RISK_COLORS.get(risk, "#60a5fa") + "22",
-                            line=dict(color=RISK_COLORS.get(risk), width=2),
-                            marker=dict(size=5)
-                        ))
-                fig.update_layout(
-                    title=dict(text="Avg Applicant Profile by Risk", font=dict(size=15, color="#e2e8f0")),
-                    polar=dict(
-                        bgcolor="rgba(0,0,0,0)",
-                        radialaxis=dict(visible=True, range=[0, 1], showticklabels=False,
-                                        gridcolor="rgba(255,255,255,0.08)"),
-                        angularaxis=dict(gridcolor="rgba(255,255,255,0.08)",
-                                         tickfont=dict(color="#cbd5e1", size=11))
+                    x=rdf['income'], y=rdf['loan_amount'],
+                    mode='markers', name=risk,
+                    marker=dict(
+                        size=14, color=RISK_COLORS.get(risk),
+                        opacity=0.85,
+                        line=dict(width=2, color="#0f172a"),
+                        symbol="circle"
                     ),
-                    **dark_layout
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ── 6B: Treemap — Portfolio View ──
-        with s6c2:
-            st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-            tree_data = df.groupby(['loan_purpose', 'risk_level']).agg(
-                count=('id', 'count'),
-                total_amount=('loan_amount', 'sum')
-            ).reset_index()
-
-            if not tree_data.empty:
-                fig = px.treemap(
-                    tree_data,
-                    path=['loan_purpose', 'risk_level'],
-                    values='count',
-                    color='risk_level',
-                    color_discrete_map=RISK_COLORS,
-                    hover_data={'total_amount': ':$,.0f'},
-                    labels={"count": "Applications", "total_amount": "Total Amount"}
-                )
-                fig.update_layout(
-                    title=dict(text="Portfolio Treemap", font=dict(size=15, color="#e2e8f0")),
-                    **dark_layout
-                )
-                fig.update_traces(
-                    textfont=dict(size=12, color="#fff"),
-                    marker=dict(cornerradius=5),
-                    hovertemplate="<b>%{label}</b><br>Applications: %{value}<br>Total: %{customdata[0]:$,.0f}<extra></extra>"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    hovertemplate=(
+                        f"<b>{risk}</b><br>"
+                        "Income: $%{x:,.0f}<br>"
+                        "Loan: $%{y:,.0f}<br>"
+                        "<extra></extra>"
+                    )
+                ))
+        fig.update_layout(
+            xaxis=dict(title=dict(text="Annual Income ($)", font=dict(size=14, color="#94a3b8")),
+                       showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+                       tickprefix="$", tickformat=",",
+                       tickfont=dict(size=12, color="#94a3b8")),
+            yaxis=dict(title=dict(text="Loan Amount ($)", font=dict(size=14, color="#94a3b8")),
+                       showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+                       tickprefix="$", tickformat=",",
+                       tickfont=dict(size=12, color="#94a3b8")),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                        font=dict(size=13, color="#e2e8f0"), bgcolor="rgba(0,0,0,0)"),
+            height=420,
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Inter, sans-serif", color="#cbd5e1"),
+            margin=dict(l=70, r=20, t=40, b=60),
+            hoverlabel=dict(bgcolor="#1e293b", font_size=13, font_color="#e2e8f0")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # ==================================================
         # DATA TABLE
@@ -982,7 +760,8 @@ if predict_button:
         
         try:
             with st.spinner("Calling ML API..."):
-                response = requests.post(f"{API_URL}/predict", json=payload)
+                headers = {"X-API-Key": os.getenv("API_KEY", "loan-predict-dev-key-2026")}
+                response = requests.post(f"{API_URL}/predict", json=payload, headers=headers)
                 response.raise_for_status()
                 data = response.json()
                 

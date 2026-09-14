@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 from sqlalchemy import (
     create_engine, Column, Integer, Float, String,
     DateTime, Boolean, Text, Date, Enum, JSON,
@@ -8,13 +9,22 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ──────────────────────────────────────────────────────────
-# MySQL connection (XAMPP — root with no password)
+# Load environment variables from .env file
 # ──────────────────────────────────────────────────────────
-DATABASE_URL = "mysql+mysqlconnector://root:@127.0.0.1:3306/loan_system"
+load_dotenv()
+
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "loan_system")
+
+DATABASE_URL = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 
 # ──────────────────────────────────────────────────────────
