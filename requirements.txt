@@ -16,3 +16,5 @@ python-dotenv
 mysql-connector-python
 plotly
 httpx
+bcrypt
+cryptography==41.0.3

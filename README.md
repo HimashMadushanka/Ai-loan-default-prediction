@@ -56,4 +56,8 @@ The model comparison workflow evaluates accuracy, precision, recall, F1 score, a
 
 This is an educational and portfolio prototype, not a production lending decision system. The recommended loan amount is only a screening estimate and is not an approval limit. A qualified reviewer must make final decisions.
 
-Before real banking use, add validated data governance, fairness testing, authentication, audit logs, encryption, model versioning, drift monitoring, human review, and regulatory approval. Do not use protected characteristics or proxy variables without an approved compliance process.
+Before real banking use, the following strict requirements must be met:
+- **Legal & Fairness Compliance**: You would need to mathematically prove to financial regulators (like the CFPB in the US) that your model doesn't accidentally discriminate against people based on age, gender, or race.
+- **Live External APIs**: You would need to replace the mocked credit score pulls with real, secure integrations to Equifax, Experian, or TransUnion.
+- **Data Encryption (PII)**: Real banking systems require deep encryption for data at rest (like encrypting National IDs and Phone Numbers in the database, not just passwords).
+- **Robust MLOps & Security**: Add validated data governance, strict audit logs, model versioning, drift monitoring, human review, and regulatory approval. Do not use protected characteristics or proxy variables without an approved compliance process.

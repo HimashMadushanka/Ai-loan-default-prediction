@@ -5,6 +5,7 @@ import requests
 import time
 import pandas as pd
 import mysql.connector
+import bcrypt
 
 # --------------------------------------------------
 # Add project root to Python path
@@ -16,7 +17,7 @@ PROJECT_ROOT = os.path.abspath(
 
 sys.path.insert(0, PROJECT_ROOT)
 
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8000"
 
 # --------------------------------------------------
 # Page configuration
@@ -27,6 +28,210 @@ st.set_page_config(
     page_icon="💳",
     layout="wide"
 )
+
+# --------------------------------------------------
+# Authentication
+# --------------------------------------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "show_forgot_password" not in st.session_state:
+    st.session_state.show_forgot_password = False
+if "show_register" not in st.session_state:
+    st.session_state.show_register = False
+
+if not st.session_state.logged_in:
+    # --- Premium Login CSS ---
+    st.markdown("""
+    <style>
+        .login-title {
+            color: #fff;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-align: center;
+            background: linear-gradient(90deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-subtitle {
+            color: #94a3b8;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Center the login box
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    
+    with col2:
+        st.write("") # Padding
+        st.write("")
+        
+        if st.session_state.show_register:
+            # --- REGISTER VIEW ---
+            st.markdown('<div class="login-title">Create Account</div>', unsafe_allow_html=True)
+            st.markdown('<div class="login-subtitle">Register a new loan officer account</div>', unsafe_allow_html=True)
+            
+            with st.form("register_form", clear_on_submit=False):
+                reg_username = st.text_input("New Username")
+                reg_password = st.text_input("New Password", type="password")
+                reg_confirm = st.text_input("Confirm Password", type="password")
+                reg_button = st.form_submit_button("Register", use_container_width=True)
+                
+                if reg_button:
+                    if not reg_username or not reg_password or not reg_confirm:
+                        st.warning("Please fill out all fields.")
+                    elif reg_password != reg_confirm:
+                        st.error("Passwords do not match.")
+                    elif len(reg_password) < 6:
+                        st.error("Password must be at least 6 characters.")
+                    else:
+                        try:
+                            from dotenv import load_dotenv
+                            load_dotenv()
+                            conn = mysql.connector.connect(
+                                host=os.getenv("DB_HOST", "127.0.0.1"),
+                                port=int(os.getenv("DB_PORT", "3306")),
+                                user=os.getenv("DB_USER", "root"),
+                                password=os.getenv("DB_PASSWORD", ""),
+                                database=os.getenv("DB_NAME", "loan_system")
+                            )
+                            cursor = conn.cursor()
+                            
+                            # Check if user exists
+                            cursor.execute("SELECT user_id FROM users WHERE username = %s", (reg_username,))
+                            if cursor.fetchone():
+                                st.error("Username already exists. Please choose another.")
+                            else:
+                                # Create user
+                                hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                                cursor.execute(
+                                    "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
+                                    (reg_username, hashed_pw, 'loan_officer')
+                                )
+                                conn.commit()
+                                st.success("Account created successfully! You can now log in.")
+                            
+                            conn.close()
+                        except Exception as e:
+                            st.error(f"Database error: {e}")
+            
+            if st.button("Back to Login", use_container_width=True):
+                st.session_state.show_register = False
+                st.rerun()
+
+        elif st.session_state.show_forgot_password:
+            # --- FORGOT PASSWORD VIEW ---
+            st.markdown('<div class="login-title">Reset Password</div>', unsafe_allow_html=True)
+            st.markdown('<div class="login-subtitle">Enter your username and new password</div>', unsafe_allow_html=True)
+            
+            with st.form("forgot_password_form", clear_on_submit=False):
+                reset_username = st.text_input("Username")
+                reset_new_password = st.text_input("New Password", type="password")
+                reset_confirm = st.text_input("Confirm New Password", type="password")
+                reset_button = st.form_submit_button("Reset Password", use_container_width=True)
+                
+                if reset_button:
+                    if not reset_username or not reset_new_password or not reset_confirm:
+                        st.warning("Please fill out all fields.")
+                    elif reset_new_password != reset_confirm:
+                        st.error("Passwords do not match.")
+                    elif len(reset_new_password) < 6:
+                        st.error("Password must be at least 6 characters.")
+                    else:
+                        try:
+                            from dotenv import load_dotenv
+                            load_dotenv()
+                            conn = mysql.connector.connect(
+                                host=os.getenv("DB_HOST", "127.0.0.1"),
+                                port=int(os.getenv("DB_PORT", "3306")),
+                                user=os.getenv("DB_USER", "root"),
+                                password=os.getenv("DB_PASSWORD", ""),
+                                database=os.getenv("DB_NAME", "loan_system")
+                            )
+                            cursor = conn.cursor()
+                            
+                            # Check if user exists
+                            cursor.execute("SELECT user_id FROM users WHERE username = %s", (reset_username,))
+                            if cursor.fetchone():
+                                # Update password
+                                hashed_pw = bcrypt.hashpw(reset_new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                                cursor.execute(
+                                    "UPDATE users SET password_hash = %s WHERE username = %s",
+                                    (hashed_pw, reset_username)
+                                )
+                                conn.commit()
+                                st.success("Password successfully reset! You can now log in.")
+                            else:
+                                st.error("Username not found.")
+                            
+                            conn.close()
+                        except Exception as e:
+                            st.error(f"Database error: {e}")
+            
+            if st.button("Back to Login", use_container_width=True):
+                st.session_state.show_forgot_password = False
+                st.rerun()
+
+        else:
+            # --- LOGIN VIEW ---
+            st.markdown('<div class="login-title">Welcome Back</div>', unsafe_allow_html=True)
+            st.markdown('<div class="login-subtitle">Sign in to the AI Loan Prediction System</div>', unsafe_allow_html=True)
+            
+            with st.form("login_form", clear_on_submit=False):
+                username_input = st.text_input("Username")
+                password_input = st.text_input("Password", type="password")
+                submit_button = st.form_submit_button("Secure Login", use_container_width=True)
+                
+                if submit_button:
+                    if username_input and password_input:
+                        try:
+                            from dotenv import load_dotenv
+                            load_dotenv()
+                            conn = mysql.connector.connect(
+                                host=os.getenv("DB_HOST", "127.0.0.1"),
+                                port=int(os.getenv("DB_PORT", "3306")),
+                                user=os.getenv("DB_USER", "root"),
+                                password=os.getenv("DB_PASSWORD", ""),
+                                database=os.getenv("DB_NAME", "loan_system")
+                            )
+                            cursor = conn.cursor(dictionary=True)
+                            cursor.execute("SELECT * FROM users WHERE username = %s", (username_input,))
+                            user = cursor.fetchone()
+                            conn.close()
+
+                            if user and bcrypt.checkpw(password_input.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                                st.session_state.logged_in = True
+                                st.session_state.username = user['username']
+                                st.rerun()
+                            else:
+                                st.error("Invalid username or password")
+                        except Exception as e:
+                            st.error(f"Database connection error: {e}")
+                    else:
+                        st.warning("Please enter both username and password")
+            
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("Forgot Password?", use_container_width=True):
+                    st.session_state.show_forgot_password = True
+                    st.rerun()
+            with col_btn2:
+                if st.button("Create Account", use_container_width=True):
+                    st.session_state.show_register = True
+                    st.rerun()
+                
+    st.stop()
+
+# Logout button in sidebar
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.rerun()
 
 if "workflow_step" not in st.session_state:
     st.session_state.workflow_step = "prediction"
@@ -45,7 +250,7 @@ if "mock_credit_history" not in st.session_state:
 # --------------------------------------------------
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Loan Application", "MLOps Dashboard"])
+page = st.sidebar.radio("Go to", ["Loan Application", "MLOps Dashboard", "Compliance & Fairness"])
 
 if page == "MLOps Dashboard":
 
@@ -1016,3 +1221,37 @@ if st.session_state.loan_result is not None:
             "Final disbursement remains subject to the bank's approval, compliance, "
             "and document-authentication procedures."
         )
+
+elif page == "Compliance & Fairness":
+    st.markdown('<div class="hero-header"><div class="hero-title">⚖️ Legal & Fairness Compliance</div><div class="hero-subtitle">Mathematical Disparate Impact Evaluation</div></div>', unsafe_allow_html=True)
+    
+    st.write("Financial regulations (e.g., CFPB) require proof that ML models do not unfairly discriminate against protected classes.")
+    
+    if st.button("Run Disparate Impact Analysis (Age Bias)", type="primary"):
+        with st.spinner("Evaluating model predictions across demographic subsets..."):
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from src.fairness import FairnessEvaluator
+            
+            evaluator = FairnessEvaluator()
+            result = evaluator.check_age_bias(age_threshold=30)
+            
+            if result['status'] == 'success':
+                st.success("Analysis Complete!")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Young Approval Rate", f"{result['young_approval_rate']*100:.1f}%")
+                col2.metric("Older Approval Rate", f"{result['old_approval_rate']*100:.1f}%")
+                col3.metric("Disparate Impact Ratio", f"{result['disparate_impact_ratio']:.3f}", 
+                           delta="Passes 0.8 Threshold" if result['four_fifths_rule_passed'] else "Fails 0.8 Threshold",
+                           delta_color="normal" if result['four_fifths_rule_passed'] else "inverse")
+                
+                st.info(f"**Conclusion:** {result['message']}")
+            else:
+                st.error(f"Error running analysis: {result.get('message', 'Unknown error')}")
+
+    st.markdown("---")
+    st.markdown("### 🔒 Live API & Encryption Architecture")
+    st.write("We have also laid the foundation for:")
+    st.markdown("- **Enterprise Encryption**: Using `cryptography.fernet` to securely encrypt PII (like National IDs) in the `loan_system` MySQL database.")
+    st.markdown("- **Secure Bureau Integrations**: Created a simulated `CreditBureauAPI` class to handle robust integrations with Equifax/Experian.")

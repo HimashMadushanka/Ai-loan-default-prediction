@@ -17,12 +17,12 @@ CREATE TABLE customers (
     date_of_birth   DATE            NOT NULL,
     gender          ENUM('Male', 'Female', 'Other') DEFAULT NULL,
     email           VARCHAR(100)    UNIQUE,
-    phone           VARCHAR(20)     NOT NULL,
+    phone_encrypted VARCHAR(255)    NOT NULL COMMENT 'Encrypted phone number',
     address         TEXT,
     city            VARCHAR(50),
     state           VARCHAR(50),
     postal_code     VARCHAR(10),
-    national_id     VARCHAR(50)     UNIQUE COMMENT 'NIC / Passport / SSN',
+    national_id_enc VARCHAR(255)    UNIQUE COMMENT 'Encrypted NIC / Passport / SSN',
     employment_type ENUM('Salaried', 'Self-Employed', 'Unemployed', 'Retired') DEFAULT 'Salaried',
     employer_name   VARCHAR(100),
     employment_years DECIMAL(4,1)   DEFAULT 0.0,
@@ -31,9 +31,7 @@ CREATE TABLE customers (
     created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    INDEX idx_customer_email (email),
-    INDEX idx_customer_phone (phone),
-    INDEX idx_customer_national_id (national_id)
+    INDEX idx_customer_email (email)
 ) ENGINE=InnoDB;
 
 
@@ -213,5 +211,15 @@ CREATE TABLE prediction_logs (
     prediction          VARCHAR(20),
     default_probability DECIMAL(6,4),
     risk_level          VARCHAR(20),
-    recommended_max_loan_amount DECIMAL(12,2)
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- 10. USERS — Application Access Control
+-- ============================================================
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'loan_officer') DEFAULT 'loan_officer',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
