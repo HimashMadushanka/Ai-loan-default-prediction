@@ -12,7 +12,7 @@ import logging
 import random
 from typing import Dict, Any
 
-# Configure structured logging
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("CreditBureauAPI")
 
@@ -33,13 +33,10 @@ class CreditBureauIntegration:
         while attempt < self.max_retries:
             attempt += 1
             try:
-                # Simulate network latency (e.g., 0.1 to 0.5 seconds)
+                
                 time.sleep(random.uniform(0.1, 0.5))
                 
-                # In real life, we would use: requests.post(self.api_base_url + "/score", cert=..., timeout=self.timeout_seconds)
-                # Here we mock the response:
-                
-                # Simulate a random temporary network failure for realism
+
                 if attempt == 1 and random.random() < 0.2:
                     raise ConnectionError("Connection timed out.")
                 
@@ -63,7 +60,6 @@ class CreditBureauIntegration:
                         "status": "ERROR",
                         "error_message": "Bureau API unreachable"
                     }
-                time.sleep(1) # Exponential backoff in a real app
+                time.sleep(1) 
 
-# Singleton usage
 credit_api = CreditBureauIntegration()
