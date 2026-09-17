@@ -18,3 +18,4 @@ plotly
 httpx
 bcrypt
 cryptography==41.0.3
+imbalanced-learn
