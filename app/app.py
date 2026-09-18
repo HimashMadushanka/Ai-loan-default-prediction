@@ -7,27 +7,18 @@ import pandas as pd
 import mysql.connector
 import bcrypt
 
-# --------------------------------------------------
-# Add project root to Python path
-# --------------------------------------------------
-
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 sys.path.insert(0, PROJECT_ROOT)
 
 API_URL = "http://127.0.0.1:8000"
 
-# --------------------------------------------------
-# Page configuration
-# --------------------------------------------------
 
 st.set_page_config(
     page_title="AI Loan Default Prediction", page_icon="💳", layout="wide"
 )
 
-# --------------------------------------------------
-# Authentication
-# --------------------------------------------------
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
@@ -38,7 +29,7 @@ if "show_register" not in st.session_state:
     st.session_state.show_register = False
 
 if not st.session_state.logged_in:
-    # --- Premium Login CSS ---
+ 
     st.markdown(
         """
     <style>
@@ -63,11 +54,10 @@ if not st.session_state.logged_in:
         unsafe_allow_html=True,
     )
 
-    # Center the login box
     col1, col2, col3 = st.columns([1, 1.5, 1])
 
     with col2:
-        st.write("")  # Padding
+        st.write("")  
         st.write("")
 
         if st.session_state.show_register:
@@ -107,7 +97,6 @@ if not st.session_state.logged_in:
                             )
                             cursor = conn.cursor()
 
-                            # Check if user exists
                             cursor.execute(
                                 "SELECT user_id FROM users WHERE username = %s",
                                 (reg_username,),
@@ -117,7 +106,7 @@ if not st.session_state.logged_in:
                                     "Username already exists. Please choose another."
                                 )
                             else:
-                                # Create user
+                                
                                 hashed_pw = bcrypt.hashpw(
                                     reg_password.encode("utf-8"), bcrypt.gensalt()
                                 ).decode("utf-8")
@@ -139,6 +128,7 @@ if not st.session_state.logged_in:
                 st.rerun()
 
         elif st.session_state.show_forgot_password:
+
             # --- FORGOT PASSWORD VIEW ---
             st.markdown(
                 '<div class="login-title">Reset Password</div>', unsafe_allow_html=True
@@ -181,13 +171,12 @@ if not st.session_state.logged_in:
                             )
                             cursor = conn.cursor()
 
-                            # Check if user exists
                             cursor.execute(
                                 "SELECT user_id FROM users WHERE username = %s",
                                 (reset_username,),
                             )
                             if cursor.fetchone():
-                                # Update password
+                                
                                 hashed_pw = bcrypt.hashpw(
                                     reset_new_password.encode("utf-8"), bcrypt.gensalt()
                                 ).decode("utf-8")
@@ -292,9 +281,7 @@ if "mock_credit_history" not in st.session_state:
     st.session_state.mock_credit_history = 6.0
 
 
-# --------------------------------------------------
 # Sidebar Navigation
-# --------------------------------------------------
 
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
@@ -303,9 +290,6 @@ page = st.sidebar.radio(
 
 if page == "MLOps Dashboard":
 
-    # ==================================================
-    # PREMIUM DASHBOARD — CSS
-    # ==================================================
     st.markdown(
         """
     <style>
@@ -473,9 +457,7 @@ if page == "MLOps Dashboard":
         unsafe_allow_html=True,
     )
 
-    # ==================================================
     # HERO HEADER
-    # ==================================================
     st.markdown(
         """
     <div class="hero-header">
@@ -982,10 +964,6 @@ if page == "MLOps Dashboard":
     st.stop()
 
 
-# --------------------------------------------------
-# Header
-# --------------------------------------------------
-
 st.title("💳 AI Loan Default Prediction")
 
 
@@ -993,9 +971,7 @@ st.title("💳 AI Loan Default Prediction")
 st.divider()
 
 
-# --------------------------------------------------
 # Applicant Information
-# --------------------------------------------------
 
 st.subheader("👤 Applicant Information")
 
@@ -1017,9 +993,7 @@ home_ownership = st.selectbox(
 )
 
 
-# --------------------------------------------------
 # Loan Information
-# --------------------------------------------------
 
 st.subheader("🏦 Loan Information")
 
@@ -1056,34 +1030,25 @@ with col_ch2:
         with st.spinner("Connecting to external Credit Bureau API..."):
             from src.credit_bureau_api import credit_api
             
-            # This calls the enterprise mock API (with built-in retries, latency, and logging)
             api_response = credit_api.fetch_credit_score(national_id="N/A", name="Applicant")
             
             if api_response.get("status") == "SUCCESS":
                 st.session_state.mock_credit_history = api_response["credit_history_years"]
-                # In a real app, we would also save api_response["credit_score"] 
+               
             else:
                 st.error("Bureau API is currently unreachable. Please try again.")
             
             st.rerun()
 
 
-# --------------------------------------------------
-# Prediction button
-# --------------------------------------------------
 
 st.divider()
 
 predict_button = st.button("🔍 Predict Loan Risk", use_container_width=True)
 
 
-# --------------------------------------------------
-# Make prediction
-# --------------------------------------------------
-
 if predict_button:
 
-    # Basic validation
     if income <= 0:
 
         st.error("Please enter a valid annual income.")
@@ -1135,9 +1100,8 @@ if predict_button:
         else:
             st.session_state.workflow_step = "prediction"
 
-        # --------------------------------------------------
+
         # Display results
-        # --------------------------------------------------
 
         st.subheader("📊 Prediction Result")
 
@@ -1149,8 +1113,7 @@ if predict_button:
 
             st.success("✅ Prediction: Lower Default Risk")
 
-        # Probability
-
+        
         st.metric(label="Default Probability", value=f"{probability:.2%}")
 
 
@@ -1169,15 +1132,11 @@ if predict_button:
 
             st.error(f"Risk Level: {risk_level}")
 
-        # Progress bar
 
         st.write("Default Probability")
 
         st.progress(float(probability))
 
-        # --------------------------------------------------
-        # Decision explanation and applicant guidance
-        # --------------------------------------------------
 
         st.subheader("🧭 Decision Explanation")
 
@@ -1201,9 +1160,7 @@ if predict_button:
                 use_container_width=True,
             )
 
-        # --------------------------------------------------
         # Applicant summary
-        # --------------------------------------------------
 
         st.subheader("📋 Applicant Summary")
 
@@ -1224,17 +1181,11 @@ if predict_button:
 
             st.write(f"**Credit History:** " f"{credit_history_years} years")
 
-        # --------------------------------------------------
-        # Disclaimer
-        # --------------------------------------------------
 
         st.divider()
 
 
-
-# --------------------------------------------------
 # Loan approval and document workflow
-# --------------------------------------------------
 
 if st.session_state.loan_result is not None:
     st.divider()

@@ -153,6 +153,28 @@ ENCRYPTION_KEY=your_fernet_encryption_key_here
 
 ## 🚀 Running the Ecosystem
 
+### ⚡ Quick Start: Run Full Project via Terminal
+To run the entire application ecosystem from your terminal, it is best to use **two separate terminal tabs/windows**. Make sure your virtual environment (`.venv`) is activated in both.
+
+**Terminal 1 (Data Pipeline & Backend API):**
+```bash
+# 1. (Optional) Run the data pipeline
+python src/preprocessing.py
+python src/feature_engineering.py
+
+# 2. Start the FastAPI Server
+uvicorn api.main:app --reload
+```
+
+**Terminal 2 (Frontend Dashboard):**
+```bash
+# 3. Start the Streamlit Dashboard
+streamlit run app/app.py
+```
+*(The dashboard will automatically open in your default web browser and connect to the API).*
+
+---
+
 ### 1. Model Retraining (Optional)
 If you wish to retrain the models from scratch using the raw data:
 ```bash

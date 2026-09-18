@@ -1,0 +1,5 @@
+[
+  "tests/test_prediction.py::test_high_risk_and_short_employment_reduce_loan_limit",
+  "tests/test_prediction.py::test_invalid_loan_input_reports_all_errors",
+  "tests/test_prediction.py::test_valid_loan_input_is_accepted"
+]
