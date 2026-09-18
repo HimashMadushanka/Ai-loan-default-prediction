@@ -404,9 +404,10 @@ if page == "MLOps Dashboard":
             margin-bottom: 4px;
         }
         .kpi-card .kpi-value {
-            font-size: 30px;
+            font-size: 24px;
             font-weight: 800;
             line-height: 1.2;
+            white-space: nowrap;
         }
         .kpi-card .kpi-sub {
             color: #64748b;
@@ -1009,6 +1010,7 @@ age = st.number_input("Age", min_value=18, max_value=100, value=28, step=1)
 income = st.number_input(
     f"Annual Income ({currency_code})", min_value=0.0, value=50000.0, step=1000.0
 )
+st.caption(f"**Formatted:** {currency_code} {income:,.2f}")
 
 employment_years = st.number_input(
     "Employment Years", min_value=0.0, max_value=60.0, value=4.0, step=1.0
@@ -1028,6 +1030,7 @@ st.subheader("🏦 Loan Information")
 loan_amount = st.number_input(
     f"Loan Amount ({currency_code})", min_value=0.0, value=10000.0, step=500.0
 )
+st.caption(f"**Formatted:** {currency_code} {loan_amount:,.2f}")
 
 loan_purpose = st.selectbox(
     "Loan Purpose",
@@ -1053,12 +1056,19 @@ with col_ch1:
 with col_ch2:
     st.write("")
     st.write("")
-    if st.button("Pull Equifax Report (Mock)"):
-        with st.spinner("Connecting to Credit Bureau..."):
-            import random
-            time.sleep(1.5)
-            # Generate a realistic random credit history between 1.0 and 20.0 years
-            st.session_state.mock_credit_history = round(random.uniform(1.0, 20.0), 1)
+    if st.button("Pull Equifax Report (API Integration)"):
+        with st.spinner("Connecting to external Credit Bureau API..."):
+            from src.credit_bureau_api import credit_api
+            
+            # This calls the enterprise mock API (with built-in retries, latency, and logging)
+            api_response = credit_api.fetch_credit_score(national_id="N/A", name="Applicant")
+            
+            if api_response.get("status") == "SUCCESS":
+                st.session_state.mock_credit_history = api_response["credit_history_years"]
+                # In a real app, we would also save api_response["credit_score"] 
+            else:
+                st.error("Bureau API is currently unreachable. Please try again.")
+            
             st.rerun()
 
 
@@ -1147,15 +1157,7 @@ if predict_button:
 
         st.metric(label="Default Probability", value=f"{probability:.2%}")
 
-        st.metric(
-            label="Recommended Maximum Loan Amount",
-            value=f"{currency_code} {result['recommended_max_loan_amount']:,.2f}",
-        )
 
-        st.caption(
-            "Screening estimate based on income, employment stability, and model risk. "
-            "It is not a final lending limit. Amounts use the selected currency code."
-        )
 
         # Risk level
 
