@@ -613,7 +613,7 @@ if page == "MLOps Dashboard":
             fig.update_layout(
                 showlegend=False,
                 height=380,
-                margin=dict(l=20, r=20, t=20, b=20),
+                margin=dict(l=80, r=80, t=20, b=20),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter, sans-serif", color="#cbd5e1"),
@@ -988,11 +988,7 @@ if page == "MLOps Dashboard":
 
 st.title("💳 AI Loan Default Prediction")
 
-st.write("""
-    This system uses machine learning to estimate the
-    probability of loan default based on applicant and
-    loan information.
-    """)
+
 
 st.divider()
 
@@ -1196,10 +1192,7 @@ if predict_button:
         for recommendation in explanation["recommendations"]:
             st.write(f"- {recommendation}")
 
-        st.caption(
-            "These are guidance points, not a guarantee of approval. "
-            "A qualified loan officer should review declined or borderline applications."
-        )
+
 
         with st.expander("View model explanation"):
             st.dataframe(
@@ -1237,12 +1230,6 @@ if predict_button:
 
         st.divider()
 
-        st.caption("""
-            ⚠️ This prediction is for educational and
-            risk-assessment purposes only. It should not
-            be used as the sole basis for making lending
-            or financial decisions.
-            """)
 
 
 # --------------------------------------------------
@@ -1407,13 +1394,3 @@ elif page == "Compliance & Fairness":
                 st.error(
                     f"Error running analysis: {result.get('message', 'Unknown error')}"
                 )
-
-    st.markdown("---")
-    st.markdown("### 🔒 Live API & Encryption Architecture")
-    st.write("We have also laid the foundation for:")
-    st.markdown(
-        "- **Enterprise Encryption**: Using `cryptography.fernet` to securely encrypt PII (like National IDs) in the `loan_system` MySQL database."
-    )
-    st.markdown(
-        "- **Secure Bureau Integrations**: Created a simulated `CreditBureauAPI` class to handle robust integrations with Equifax/Experian."
-    )
