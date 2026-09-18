@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_PATH = PROJECT_ROOT / "data" / "row" / "credit_risk_dataset.csv"
 CLEANED_DATA_PATH = PROJECT_ROOT / "data" / "processed" / "cleaned_data.csv"
@@ -32,7 +31,7 @@ def rename_columns(df):
         "loan_status": "default",
         "loan_percent_income": "loan_income_ratio",
         "cb_person_default_on_file": "previous_default",
-        "cb_person_cred_hist_length": "credit_history_years"
+        "cb_person_cred_hist_length": "credit_history_years",
     }
 
     df = df.rename(columns=column_mapping)
@@ -54,44 +53,33 @@ def clean_data(df):
         "loan_amount",
         "interest_rate",
         "loan_income_ratio",
-        "credit_history_years"
+        "credit_history_years",
     ]
 
-  
     categorical_columns = [
         "home_ownership",
         "loan_purpose",
         "loan_grade",
-        "previous_default"
+        "previous_default",
     ]
 
     for column in numerical_columns:
         if column in df.columns:
-            df[column] = df[column].fillna(
-                df[column].median()
-            )
+            df[column] = df[column].fillna(df[column].median())
 
     for column in categorical_columns:
         if column in df.columns:
-            df[column] = df[column].fillna(
-                df[column].mode()[0]
-            )
+            df[column] = df[column].fillna(df[column].mode()[0])
 
     return df
 
 
-def save_cleaned_data(
-    df,
-    file_path=CLEANED_DATA_PATH
-):
+def save_cleaned_data(df, file_path=CLEANED_DATA_PATH):
     """
     Save cleaned dataset.
     """
 
-    df.to_csv(
-        file_path,
-        index=False
-    )
+    df.to_csv(file_path, index=False)
 
     print(f"Cleaned data saved to: {file_path}")
 

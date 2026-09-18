@@ -3,16 +3,10 @@ import joblib
 import shap
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = PROJECT_ROOT / "models" / "best_model.pkl"
 
-VALID_HOME_OWNERSHIP = {
-    "RENT",
-    "OWN",
-    "MORTGAGE",
-    "OTHER"
-}
+VALID_HOME_OWNERSHIP = {"RENT", "OWN", "MORTGAGE", "OTHER"}
 
 VALID_LOAN_PURPOSES = {
     "PERSONAL",
@@ -20,7 +14,7 @@ VALID_LOAN_PURPOSES = {
     "MEDICAL",
     "VENTURE",
     "HOMEIMPROVEMENT",
-    "DEBTCONSOLIDATION"
+    "DEBTCONSOLIDATION",
 }
 
 
@@ -31,7 +25,7 @@ def validate_loan_input(
     home_ownership,
     loan_amount,
     loan_purpose,
-    credit_history_years
+    credit_history_years,
 ):
     """Reject missing, invalid, or implausible applicant values."""
 
@@ -42,7 +36,7 @@ def validate_loan_input(
         "home_ownership": home_ownership,
         "loan_amount": loan_amount,
         "loan_purpose": loan_purpose,
-        "credit_history_years": credit_history_years
+        "credit_history_years": credit_history_years,
     }
     errors = []
 
@@ -55,7 +49,7 @@ def validate_loan_input(
         "income": (1, 10_000_000),
         "employment_years": (0, 80),
         "loan_amount": (1, 10_000_000),
-        "credit_history_years": (0, 80)
+        "credit_history_years": (0, 80),
     }
 
     for name, (minimum, maximum) in numeric_ranges.items():
@@ -72,14 +66,10 @@ def validate_loan_input(
             errors.append(f"{name} must be a valid number")
 
     if home_ownership not in VALID_HOME_OWNERSHIP:
-        errors.append(
-            f"home_ownership must be one of: {sorted(VALID_HOME_OWNERSHIP)}"
-        )
+        errors.append(f"home_ownership must be one of: {sorted(VALID_HOME_OWNERSHIP)}")
 
     if loan_purpose not in VALID_LOAN_PURPOSES:
-        errors.append(
-            f"loan_purpose must be one of: {sorted(VALID_LOAN_PURPOSES)}"
-        )
+        errors.append(f"loan_purpose must be one of: {sorted(VALID_LOAN_PURPOSES)}")
 
     if not errors and float(loan_amount) / float(income) > 100:
         errors.append("loan_amount cannot be more than 100 times annual income")
@@ -116,11 +106,14 @@ def _shap_values_for_pipeline(model, input_data):
         shap_values = shap_values[:, :, -1]
 
     source_features = input_data.columns.tolist()
-    aggregated_values = pd.DataFrame(0.0, index=input_data.index, columns=source_features)
+    aggregated_values = pd.DataFrame(
+        0.0, index=input_data.index, columns=source_features
+    )
     for index, encoded_name in enumerate(feature_names):
         source_name = encoded_name.split("__", 1)[-1]
         source_name = next(
-            feature for feature in source_features
+            feature
+            for feature in source_features
             if source_name == feature or source_name.startswith(feature + "_")
         )
         aggregated_values[source_name] += shap_values[:, index]
@@ -137,7 +130,7 @@ def explain_prediction(
     loan_amount,
     loan_purpose,
     credit_history_years,
-    top_n=5
+    top_n=5,
 ):
     """Explain one prediction with SHAP values and plain-language reason codes."""
 
@@ -148,26 +141,32 @@ def explain_prediction(
         home_ownership=home_ownership,
         loan_amount=loan_amount,
         loan_purpose=loan_purpose,
-        credit_history_years=credit_history_years
+        credit_history_years=credit_history_years,
     )
 
-    input_data = pd.DataFrame({
-        "age": [age],
-        "income": [income],
-        "employment_years": [employment_years],
-        "home_ownership": [home_ownership],
-        "loan_amount": [loan_amount],
-        "loan_purpose": [loan_purpose],
-        "credit_history_years": [credit_history_years]
-    })
+    input_data = pd.DataFrame(
+        {
+            "age": [age],
+            "income": [income],
+            "employment_years": [employment_years],
+            "home_ownership": [home_ownership],
+            "loan_amount": [loan_amount],
+            "loan_purpose": [loan_purpose],
+            "credit_history_years": [credit_history_years],
+        }
+    )
     shap_values, expected_value = _shap_values_for_pipeline(model, input_data)
-    explanation = pd.DataFrame({
-        "feature": shap_values.columns,
-        "value": input_data.iloc[0].values,
-        "shap_value": shap_values.iloc[0].values
-    })
+    explanation = pd.DataFrame(
+        {
+            "feature": shap_values.columns,
+            "value": input_data.iloc[0].values,
+            "shap_value": shap_values.iloc[0].values,
+        }
+    )
     explanation["impact"] = explanation["shap_value"].apply(
-        lambda value: "increases default risk" if value > 0 else "decreases default risk"
+        lambda value: (
+            "increases default risk" if value > 0 else "decreases default risk"
+        )
     )
     explanation = explanation.sort_values(
         "shap_value", key=lambda values: values.abs(), ascending=False
@@ -186,7 +185,9 @@ def explain_prediction(
         reason_codes.append("rents home")
 
     return {
-        "base_value": float(expected_value[-1] if hasattr(expected_value, "__len__") else expected_value),
+        "base_value": float(
+            expected_value[-1] if hasattr(expected_value, "__len__") else expected_value
+        ),
         "default_probability": float(model.predict_proba(input_data)[0, 1]),
         "feature_explanations": explanation.reset_index(drop=True),
         "reason_codes": reason_codes,
@@ -195,8 +196,8 @@ def explain_prediction(
             employment_years=employment_years,
             loan_amount=loan_amount,
             credit_history_years=credit_history_years,
-            reason_codes=reason_codes
-        )
+            reason_codes=reason_codes,
+        ),
     }
 
 
@@ -215,25 +216,16 @@ def global_shap_importance(model, reference_data):
 
 
 def build_recommendations(
-    income,
-    employment_years,
-    loan_amount,
-    credit_history_years,
-    reason_codes
+    income, employment_years, loan_amount, credit_history_years, reason_codes
 ):
     """Create applicant guidance from validated values and reason codes."""
 
     reason_to_recommendation = {
-        "high loan amount relative to income":
-            "Consider applying for a smaller loan amount.",
-        "low income":
-            "Submit verified additional income information if available.",
-        "short employment history":
-            "A longer employment history may improve future applications.",
-        "short credit history":
-            "Building a longer repayment history may improve future applications.",
-        "rents home":
-            "Provide complete, verified financial information for manual review."
+        "high loan amount relative to income": "Consider applying for a smaller loan amount.",
+        "low income": "Submit verified additional income information if available.",
+        "short employment history": "A longer employment history may improve future applications.",
+        "short credit history": "Building a longer repayment history may improve future applications.",
+        "rents home": "Provide complete, verified financial information for manual review.",
     }
     recommendations = [
         reason_to_recommendation[reason]
@@ -262,11 +254,9 @@ def recommend_max_loan_amount(income, employment_years, risk_level):
     annual_income = float(income)
     years_employed = float(employment_years)
 
-    income_multiplier = {
-        "Low Risk": 0.30,
-        "Medium Risk": 0.20,
-        "High Risk": 0.10
-    }[risk_level]
+    income_multiplier = {"Low Risk": 0.30, "Medium Risk": 0.20, "High Risk": 0.10}[
+        risk_level
+    ]
 
     employment_factor = 0.75 if years_employed < 2 else 1.0
     recommended_amount = annual_income * income_multiplier * employment_factor
@@ -282,7 +272,7 @@ def predict_loan_risk(
     home_ownership,
     loan_amount,
     loan_purpose,
-    credit_history_years
+    credit_history_years,
 ):
     """
     Predict loan default risk for a single applicant.
@@ -295,26 +285,24 @@ def predict_loan_risk(
         home_ownership=home_ownership,
         loan_amount=loan_amount,
         loan_purpose=loan_purpose,
-        credit_history_years=credit_history_years
+        credit_history_years=credit_history_years,
     )
 
-  
-    input_data = pd.DataFrame({
-        "age": [age],
-        "income": [income],
-        "employment_years": [employment_years],
-        "home_ownership": [home_ownership],
-        "loan_amount": [loan_amount],
-        "loan_purpose": [loan_purpose],
-        "credit_history_years": [credit_history_years]
-    })
-
+    input_data = pd.DataFrame(
+        {
+            "age": [age],
+            "income": [income],
+            "employment_years": [employment_years],
+            "home_ownership": [home_ownership],
+            "loan_amount": [loan_amount],
+            "loan_purpose": [loan_purpose],
+            "credit_history_years": [credit_history_years],
+        }
+    )
 
     prediction = model.predict(input_data)[0]
 
-    probability = model.predict_proba(
-        input_data
-    )[0][1]
+    probability = model.predict_proba(input_data)[0][1]
 
     if prediction == 1:
         result = "Default"
@@ -335,10 +323,8 @@ def predict_loan_risk(
         "default_probability": probability,
         "risk_level": risk_level,
         "recommended_max_loan_amount": recommend_max_loan_amount(
-            income=income,
-            employment_years=employment_years,
-            risk_level=risk_level
-        )
+            income=income, employment_years=employment_years, risk_level=risk_level
+        ),
     }
 
 
@@ -346,7 +332,6 @@ if __name__ == "__main__":
 
     model = load_model()
 
- 
     result = predict_loan_risk(
         model=model,
         age=28,
@@ -355,23 +340,14 @@ if __name__ == "__main__":
         home_ownership="RENT",
         loan_amount=10000,
         loan_purpose="EDUCATION",
-        credit_history_years=6
+        credit_history_years=6,
     )
 
     print("\nLoan Risk Prediction")
     print("--------------------")
 
-    print(
-        "Prediction:",
-        result["prediction"]
-    )
+    print("Prediction:", result["prediction"])
 
-    print(
-        "Default Probability:",
-        f"{result['default_probability']:.2%}"
-    )
+    print("Default Probability:", f"{result['default_probability']:.2%}")
 
-    print(
-        "Risk Level:",
-        result["risk_level"]
-    )
+    print("Risk Level:", result["risk_level"])

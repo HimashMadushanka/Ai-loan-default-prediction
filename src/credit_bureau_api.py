@@ -12,9 +12,11 @@ import logging
 import random
 from typing import Dict, Any
 
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("CreditBureauAPI")
+
 
 class CreditBureauIntegration:
     def __init__(self, provider_name: str = "Equifax"):
@@ -27,39 +29,45 @@ class CreditBureauIntegration:
         """
         Simulates fetching a credit score with enterprise-grade error handling.
         """
-        logger.info(f"Initiating secure credit pull from {self.provider_name} for applicant.")
-        
+        logger.info(
+            f"Initiating secure credit pull from {self.provider_name} for applicant."
+        )
+
         attempt = 0
         while attempt < self.max_retries:
             attempt += 1
             try:
-                
+
                 time.sleep(random.uniform(0.1, 0.5))
-                
 
                 if attempt == 1 and random.random() < 0.2:
                     raise ConnectionError("Connection timed out.")
-                
+
                 mock_score = random.randint(550, 850)
                 mock_history_years = round(random.uniform(1.0, 15.0), 1)
-                
-                logger.info(f"Successfully retrieved credit profile from {self.provider_name}.")
+
+                logger.info(
+                    f"Successfully retrieved credit profile from {self.provider_name}."
+                )
                 return {
                     "status": "SUCCESS",
                     "provider": self.provider_name,
                     "credit_score": mock_score,
                     "credit_history_years": mock_history_years,
-                    "bureau_flags": ["NO_RECENT_BANKRUPTCIES"]
+                    "bureau_flags": ["NO_RECENT_BANKRUPTCIES"],
                 }
 
             except ConnectionError as ce:
-                logger.warning(f"Attempt {attempt}/{self.max_retries} failed to reach {self.provider_name}: {str(ce)}")
+                logger.warning(
+                    f"Attempt {attempt}/{self.max_retries} failed to reach {self.provider_name}: {str(ce)}"
+                )
                 if attempt == self.max_retries:
                     logger.error("Max retries exceeded. Credit pull failed.")
                     return {
                         "status": "ERROR",
-                        "error_message": "Bureau API unreachable"
+                        "error_message": "Bureau API unreachable",
                     }
-                time.sleep(1) 
+                time.sleep(1)
+
 
 credit_api = CreditBureauIntegration()

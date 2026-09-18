@@ -193,7 +193,7 @@ CREATE TABLE prediction_logs (
     credit_history_years DECIMAL(4,1),
     prediction          VARCHAR(20),
     default_probability DECIMAL(6,4),
-    risk_level          VARCHAR(20),
+    risk_level          VARCHAR(20)
 ) ENGINE=InnoDB;
 
 
