@@ -1,16 +1,8 @@
--- ============================================================
--- AI Loan Default Prediction System — Full Database Schema
--- ============================================================
--- Flow: customers → applications → documents → credit_checks
---       → ml_predictions → approvals → emi_schedules → payments
--- ============================================================
-
 CREATE DATABASE IF NOT EXISTS loan_system;
 USE loan_system;
 
--- ============================================================
 -- 1. CUSTOMERS — Core applicant information
--- ============================================================
+
 CREATE TABLE customers (
     customer_id     INT AUTO_INCREMENT PRIMARY KEY,
     full_name       VARCHAR(100)    NOT NULL,
@@ -35,9 +27,8 @@ CREATE TABLE customers (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 2. LOAN APPLICATIONS — Each loan request
--- ============================================================
+
 CREATE TABLE loan_applications (
     application_id  INT AUTO_INCREMENT PRIMARY KEY,
     customer_id     INT             NOT NULL,
@@ -64,9 +55,8 @@ CREATE TABLE loan_applications (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 3. DOCUMENTS — KYC & supporting documents
--- ============================================================
+
 CREATE TABLE documents (
     document_id     INT AUTO_INCREMENT PRIMARY KEY,
     application_id  INT             NOT NULL,
@@ -88,9 +78,8 @@ CREATE TABLE documents (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 4. CREDIT CHECKS — Bureau / credit history data
--- ============================================================
+
 CREATE TABLE credit_checks (
     check_id            INT AUTO_INCREMENT PRIMARY KEY,
     application_id      INT             NOT NULL,
@@ -110,9 +99,8 @@ CREATE TABLE credit_checks (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 5. ML PREDICTIONS — Model scoring results
--- ============================================================
+
 CREATE TABLE ml_predictions (
     prediction_id               INT AUTO_INCREMENT PRIMARY KEY,
     application_id              INT             NOT NULL,
@@ -133,9 +121,7 @@ CREATE TABLE ml_predictions (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 6. APPROVALS — Final banker decision
--- ============================================================
 CREATE TABLE approvals (
     approval_id         INT AUTO_INCREMENT PRIMARY KEY,
     application_id      INT             NOT NULL,
@@ -153,9 +139,8 @@ CREATE TABLE approvals (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 7. EMI SCHEDULES — Monthly installment plan
--- ============================================================
+
 CREATE TABLE emi_schedules (
     emi_id              INT AUTO_INCREMENT PRIMARY KEY,
     application_id      INT             NOT NULL,
@@ -174,9 +159,8 @@ CREATE TABLE emi_schedules (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
 -- 8. PAYMENTS — Actual payment records
--- ============================================================
+
 CREATE TABLE payments (
     payment_id      INT AUTO_INCREMENT PRIMARY KEY,
     emi_id          INT             NOT NULL,
@@ -195,9 +179,8 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB;
 
 
--- ============================================================
--- 9. PREDICTION LOGS — MLOps monitoring (backward compatible)
--- ============================================================
+-- 9. PREDICTION LOGS — MLOps monitoring 
+
 CREATE TABLE prediction_logs (
     id                  INT AUTO_INCREMENT PRIMARY KEY,
     timestamp           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
@@ -213,9 +196,9 @@ CREATE TABLE prediction_logs (
     risk_level          VARCHAR(20),
 ) ENGINE=InnoDB;
 
--- ============================================================
+
 -- 10. USERS — Application Access Control
--- ============================================================
+
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,

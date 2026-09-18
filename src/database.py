@@ -8,9 +8,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
-# ──────────────────────────────────────────────────────────
-# Load environment variables from .env file
-# ──────────────────────────────────────────────────────────
 load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
@@ -26,10 +23,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-
-# ──────────────────────────────────────────────────────────
-# 1. CUSTOMERS
-# ──────────────────────────────────────────────────────────
 class Customer(Base):
     __tablename__ = "customers"
 
@@ -52,13 +45,10 @@ class Customer(Base):
     created_at       = Column(DateTime, default=datetime.utcnow)
     updated_at       = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
+
     applications = relationship("LoanApplication", back_populates="customer", cascade="all, delete-orphan")
 
 
-# ──────────────────────────────────────────────────────────
-# 2. LOAN APPLICATIONS
-# ──────────────────────────────────────────────────────────
 class LoanApplication(Base):
     __tablename__ = "loan_applications"
 
@@ -80,7 +70,6 @@ class LoanApplication(Base):
     applied_at       = Column(DateTime, default=datetime.utcnow)
     updated_at       = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     customer     = relationship("Customer", back_populates="applications")
     documents    = relationship("Document", back_populates="application", cascade="all, delete-orphan")
     credit_checks = relationship("CreditCheck", back_populates="application", cascade="all, delete-orphan")
@@ -89,9 +78,7 @@ class LoanApplication(Base):
     emi_schedules = relationship("EMISchedule", back_populates="application", cascade="all, delete-orphan")
 
 
-# ──────────────────────────────────────────────────────────
-# 3. DOCUMENTS
-# ──────────────────────────────────────────────────────────
+
 class Document(Base):
     __tablename__ = "documents"
 
@@ -109,13 +96,10 @@ class Document(Base):
     verified_at    = Column(DateTime, default=None)
     uploaded_at    = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     application = relationship("LoanApplication", back_populates="documents")
 
 
-# ──────────────────────────────────────────────────────────
-# 4. CREDIT CHECKS
-# ──────────────────────────────────────────────────────────
+
 class CreditCheck(Base):
     __tablename__ = "credit_checks"
 
@@ -131,13 +115,9 @@ class CreditCheck(Base):
     report_json          = Column(JSON, default=None)
     checked_at           = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     application = relationship("LoanApplication", back_populates="credit_checks")
 
 
-# ──────────────────────────────────────────────────────────
-# 5. ML PREDICTIONS
-# ──────────────────────────────────────────────────────────
 class MLPrediction(Base):
     __tablename__ = "ml_predictions"
 
@@ -153,13 +133,9 @@ class MLPrediction(Base):
     reason_codes                = Column(JSON, default=None)
     scored_at                   = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     application = relationship("LoanApplication", back_populates="predictions")
 
 
-# ──────────────────────────────────────────────────────────
-# 6. APPROVALS
-# ──────────────────────────────────────────────────────────
 class Approval(Base):
     __tablename__ = "approvals"
 
@@ -173,13 +149,9 @@ class Approval(Base):
     conditions           = Column(Text, default=None)
     decision_at          = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     application = relationship("LoanApplication", back_populates="approvals")
 
 
-# ──────────────────────────────────────────────────────────
-# 7. EMI SCHEDULES
-# ──────────────────────────────────────────────────────────
 class EMISchedule(Base):
     __tablename__ = "emi_schedules"
 
@@ -193,14 +165,10 @@ class EMISchedule(Base):
     outstanding_balance = Column(DECIMAL(12, 2), nullable=False)
     status              = Column(Enum('PENDING', 'PAID', 'OVERDUE', 'PARTIALLY_PAID'), default='PENDING')
 
-    # Relationships
     application = relationship("LoanApplication", back_populates="emi_schedules")
     payments    = relationship("Payment", back_populates="emi", cascade="all, delete-orphan")
 
 
-# ──────────────────────────────────────────────────────────
-# 8. PAYMENTS
-# ──────────────────────────────────────────────────────────
 class Payment(Base):
     __tablename__ = "payments"
 
@@ -212,13 +180,9 @@ class Payment(Base):
     transaction_ref = Column(String(100), default=None)
     paid_at         = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     emi = relationship("EMISchedule", back_populates="payments")
 
 
-# ──────────────────────────────────────────────────────────
-# 9. PREDICTION LOGS — MLOps monitoring (backward compatible)
-# ──────────────────────────────────────────────────────────
 class PredictionLog(Base):
     __tablename__ = "prediction_logs"
 
@@ -237,9 +201,6 @@ class PredictionLog(Base):
     recommended_max_loan_amount = Column(Float)
 
 
-# ──────────────────────────────────────────────────────────
-# Database helpers
-# ──────────────────────────────────────────────────────────
 def init_db():
     """Create all tables if they don't exist."""
     Base.metadata.create_all(bind=engine)
@@ -254,9 +215,6 @@ def get_db():
         db.close()
 
 
-# ──────────────────────────────────────────────────────────
-# Quick connection test
-# ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     try:
         connection = engine.connect()

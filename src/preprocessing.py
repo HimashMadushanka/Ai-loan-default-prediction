@@ -2,7 +2,6 @@ import pandas as pd
 from pathlib import Path
 
 
-# File paths
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_PATH = PROJECT_ROOT / "data" / "row" / "credit_risk_dataset.csv"
 CLEANED_DATA_PATH = PROJECT_ROOT / "data" / "processed" / "cleaned_data.csv"
@@ -46,10 +45,8 @@ def clean_data(df):
     Clean the dataset.
     """
 
-    # Remove duplicate rows
     df = df.drop_duplicates()
 
-    # Numerical columns
     numerical_columns = [
         "age",
         "income",
@@ -60,7 +57,7 @@ def clean_data(df):
         "credit_history_years"
     ]
 
-    # Categorical columns
+  
     categorical_columns = [
         "home_ownership",
         "loan_purpose",
@@ -68,14 +65,12 @@ def clean_data(df):
         "previous_default"
     ]
 
-    # Fill numerical missing values with median
     for column in numerical_columns:
         if column in df.columns:
             df[column] = df[column].fillna(
                 df[column].median()
             )
 
-    # Fill categorical missing values with mode
     for column in categorical_columns:
         if column in df.columns:
             df[column] = df[column].fillna(

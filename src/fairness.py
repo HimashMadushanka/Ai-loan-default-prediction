@@ -12,7 +12,6 @@ import os
 import logging
 from typing import Dict, Any
 
-# Configure structured logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("FairnessCompliance")
 
@@ -33,20 +32,17 @@ class FairnessEvaluator:
             return {"status": "error", "message": "Model or Data missing"}
 
         try:
-            # Load Data and Model
+            
             df = pd.read_csv(self.data_path)
             model = joblib.load(self.model_path)
             
-            # For this test, we simulate predictions on the full dataset
             X = df.drop(columns=['default'])
             predictions = model.predict(X)
             df['predicted_default'] = predictions
-            
-            # Groups: 'older' vs 'younger'
+          
             young_mask = df['age'] <= age_threshold
             old_mask = df['age'] > age_threshold
             
-            # Approval rate = NOT defaulting
             young_approval_rate = 1.0 - df.loc[young_mask, 'predicted_default'].mean()
             old_approval_rate = 1.0 - df.loc[old_mask, 'predicted_default'].mean()
             

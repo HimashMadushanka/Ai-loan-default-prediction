@@ -9,13 +9,12 @@ import os
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
-# Load environment variables
+
 load_dotenv()
 
 class EncryptionService:
     def __init__(self):
-        # In a real enterprise system, this key would be stored in a secure Vault (e.g., AWS KMS or HashiCorp Vault)
-        # For this prototype, we'll generate one if it doesn't exist in the environment
+
         key = os.getenv("ENCRYPTION_KEY")
         if not key:
             key = Fernet.generate_key().decode('utf-8')
@@ -37,5 +36,4 @@ class EncryptionService:
         decrypted_bytes = self.cipher_suite.decrypt(encrypted_text.encode('utf-8'))
         return decrypted_bytes.decode('utf-8')
 
-# Singleton instance
 encryption_service = EncryptionService()

@@ -298,7 +298,7 @@ def predict_loan_risk(
         credit_history_years=credit_history_years
     )
 
-    # Create input dataframe
+  
     input_data = pd.DataFrame({
         "age": [age],
         "income": [income],
@@ -309,21 +309,18 @@ def predict_loan_risk(
         "credit_history_years": [credit_history_years]
     })
 
-    # Prediction
+
     prediction = model.predict(input_data)[0]
 
-    # Default probability
     probability = model.predict_proba(
         input_data
     )[0][1]
 
-    # Convert prediction
     if prediction == 1:
         result = "Default"
     else:
         result = "Non-Default"
 
-    # Risk level
     if probability < 0.30:
         risk_level = "Low Risk"
 
@@ -347,10 +344,9 @@ def predict_loan_risk(
 
 if __name__ == "__main__":
 
-    # Load model
     model = load_model()
 
-    # Example applicant
+ 
     result = predict_loan_risk(
         model=model,
         age=28,

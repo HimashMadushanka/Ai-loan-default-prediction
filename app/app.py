@@ -450,7 +450,7 @@ if page == "MLOps Dashboard":
         import plotly.express as px
         import plotly.graph_objects as go
 
-        # ── Computed Metrics ──
+       
         total = len(df)
         non_default_count = (df['prediction'] == 'Non-Default').sum()
         default_count = (df['prediction'] == 'Default').sum()
@@ -460,7 +460,7 @@ if page == "MLOps Dashboard":
         avg_loan = df['loan_amount'].mean()
         avg_income = df['income'].mean()
 
-        # ── Color Palette ──
+ 
         RISK_COLORS = {"Low Risk": "#4ade80", "Medium Risk": "#fbbf24", "High Risk": "#f87171"}
 
         dark_layout = dict(
@@ -472,9 +472,6 @@ if page == "MLOps Dashboard":
             hoverlabel=dict(bgcolor="#1e293b", font_size=12, font_color="#e2e8f0")
         )
 
-        # ==================================================
-        # KPI CARDS — 6 metrics
-        # ==================================================
         st.markdown(f"""
         <div class="kpi-row">
             <div class="kpi-card kpi-purple">
@@ -516,9 +513,7 @@ if page == "MLOps Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-        # ==================================================
-        # CHART 1 — Risk Distribution (Full Width)
-        # ==================================================
+
         st.markdown("""
         <div class="dash-section">
             <div class="sec-icon purple">🛡️</div>
@@ -560,7 +555,7 @@ if page == "MLOps Dashboard":
             st.plotly_chart(fig, use_container_width=True)
 
         with ch1_right:
-            # Summary table for risk levels
+         
             for _, row in risk_counts.iterrows():
                 level = row['Risk Level']
                 count = row['Count']
@@ -582,7 +577,7 @@ if page == "MLOps Dashboard":
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Approval vs Default summary
+        
             st.markdown(f"""
             <div style="
                 display:flex; gap:12px; margin-top:6px;
@@ -600,9 +595,7 @@ if page == "MLOps Dashboard":
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==================================================
-        # CHART 2 — Loans by Purpose (Full Width)
-        # ==================================================
+
         st.markdown("""
         <div class="dash-section">
             <div class="sec-icon blue">🏦</div>
@@ -651,9 +644,7 @@ if page == "MLOps Dashboard":
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==================================================
-        # CHART 3 — Predictions Over Time (Full Width)
-        # ==================================================
+
         if 'timestamp' in df.columns and not df['timestamp'].isna().all():
             st.markdown("""
             <div class="dash-section">
@@ -708,9 +699,6 @@ if page == "MLOps Dashboard":
             st.plotly_chart(fig, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==================================================
-        # CHART 4 — Income vs Loan Amount (Full Width)
-        # ==================================================
         st.markdown("""
         <div class="dash-section">
             <div class="sec-icon cyan">💰</div>
@@ -759,9 +747,7 @@ if page == "MLOps Dashboard":
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==================================================
-        # DATA TABLE
-        # ==================================================
+
         st.markdown("""
         <div class="dash-section">
             <div class="sec-icon blue">📋</div>
@@ -796,7 +782,7 @@ if page == "MLOps Dashboard":
             }
         )
 
-        # ── Footer ──
+     
         st.markdown("""
         <div style="text-align:center; padding:24px 0 8px 0; color:#475569; font-size:12px;">
             AI Loan Default Prediction System &bull; MLOps Dashboard &bull; Powered by XGBoost
@@ -1254,4 +1240,4 @@ elif page == "Compliance & Fairness":
     st.markdown("### 🔒 Live API & Encryption Architecture")
     st.write("We have also laid the foundation for:")
     st.markdown("- **Enterprise Encryption**: Using `cryptography.fernet` to securely encrypt PII (like National IDs) in the `loan_system` MySQL database.")
-    st.markdown("- **Secure Bureau Integrations**: Created a simulated `CreditBureauAPI` class to handle robust integrations with Equifax/Experian.")
+    st.markdown("- **Secure Bureau Integrations**: Created a simulated `CreditBureauAPI` class to handle robust integrations with Equifax/Experian.")

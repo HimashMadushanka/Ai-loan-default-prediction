@@ -7,9 +7,7 @@ import sys
 import os
 import logging
 
-# ──────────────────────────────────────────────────────────
-# Setup
-# ──────────────────────────────────────────────────────────
+
 
 load_dotenv()
 
@@ -19,19 +17,15 @@ sys.path.insert(0, PROJECT_ROOT)
 from src.prediction import load_model, predict_loan_risk, explain_prediction
 from src.database import init_db, get_db, PredictionLog
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# Initialize database
+
 init_db()
 
-# ──────────────────────────────────────────────────────────
-# FastAPI App
-# ──────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="AI Loan Prediction API",
@@ -39,13 +33,10 @@ app = FastAPI(
     version=os.getenv("MODEL_VERSION", "1.0.0")
 )
 
-# Load the model once at startup
+
 MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "best_model.pkl")
 model = load_model(MODEL_PATH)
 
-# ──────────────────────────────────────────────────────────
-# API Key Authentication
-# ──────────────────────────────────────────────────────────
 
 API_KEY = os.getenv("API_KEY", "loan-predict-dev-key-2026")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -66,9 +57,6 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
     return api_key
 
 
-# ──────────────────────────────────────────────────────────
-# Request / Response Models
-# ──────────────────────────────────────────────────────────
 
 class LoanApplication(BaseModel):
     age: int = Field(..., ge=18, le=100, description="Applicant age (18-100)")
@@ -93,9 +81,6 @@ class ModelInfoResponse(BaseModel):
     features: list
 
 
-# ──────────────────────────────────────────────────────────
-# Global Error Handler
-# ──────────────────────────────────────────────────────────
 
 from fastapi.responses import JSONResponse
 from fastapi import Request
@@ -121,9 +106,6 @@ async def validation_exception_handler(request: Request, exc: ValueError):
     )
 
 
-# ──────────────────────────────────────────────────────────
-# Endpoints
-# ──────────────────────────────────────────────────────────
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
@@ -179,7 +161,7 @@ def predict_loan(
         credit_history_years=application.credit_history_years
     )
 
-    # Get explanation
+ 
     explanation = explain_prediction(
         model=model,
         age=application.age,
@@ -192,13 +174,13 @@ def predict_loan(
     )
 
     import pandas as pd
-    # Convert types for JSON serialization
+ 
     result["default_probability"] = float(result["default_probability"])
     result["recommended_max_loan_amount"] = float(result["recommended_max_loan_amount"])
     if isinstance(explanation.get("feature_explanations"), pd.DataFrame):
         explanation["feature_explanations"] = explanation["feature_explanations"].to_dict(orient="records")
 
-    # Log to MLOps database
+
     db_log = PredictionLog(
         age=application.age,
         income=application.income,
