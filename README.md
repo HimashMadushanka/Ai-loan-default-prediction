@@ -198,6 +198,30 @@ streamlit run app/app.py
 ```
 The dashboard will open automatically in your browser, allowing you to input applicant data and view the real-time risk assessment and SHAP explanations.
 
+### 4. Single-Command All-in-One Launcher
+Alternatively, run both FastAPI and Streamlit together with automatic port cleanup:
+```bash
+python run.py
+# Or on Windows:
+run.bat
+```
+
+### 5. Run with Docker (Containerized)
+Run the entire stack in an isolated container without setting up local Python dependencies:
+```bash
+# Start container in background
+docker compose up -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Stop container
+docker compose down
+```
+
 ---
 
 ## 🧪 Testing

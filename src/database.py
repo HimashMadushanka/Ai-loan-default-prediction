@@ -26,7 +26,8 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "loan_system")
 
-DATABASE_URL = (
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
     f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 )
 
@@ -286,8 +287,15 @@ class PredictionLog(Base):
 
 
 def init_db():
-    """Create all tables if they don't exist."""
-    Base.metadata.create_all(bind=engine)
+    """Create all tables if they don't exist, falling back to SQLite if MySQL is offline."""
+    global engine, SessionLocal
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"⚠️ Primary DB connection failed ({e}). Falling back to local SQLite database...")
+        engine = create_engine("sqlite:///./loan_system.db", echo=False)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
 
 
 def get_db():

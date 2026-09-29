@@ -1,0 +1,22 @@
+# Python cache & virtual environments
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Git & Antigravity IDE
+.git/
+.gitignore
+.gemini/
+.agents/
+
+# Jupyter & Scratch
+.ipynb_checkpoints/
+scratch/
+*.log
+
+# Reports and generated docs
+*.pdf
