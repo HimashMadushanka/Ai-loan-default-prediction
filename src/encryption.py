@@ -12,19 +12,31 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class EncryptionService:
-    def __init__(self):
+import logging
 
-        key = os.getenv("ENCRYPTION_KEY")
-        if not key:
-            key = Fernet.generate_key().decode("utf-8")
-            print(
-                f"WARNING: No ENCRYPTION_KEY found in .env. Using temporary key: {key}"
-            )
-            print(
-                "Please add ENCRYPTION_KEY to your .env file for persistent encryption."
-            )
-        self.cipher_suite = Fernet(key.encode("utf-8"))
+logger = logging.getLogger("EncryptionService")
+
+
+class EncryptionService:
+    def __init__(self, key: str | None = None):
+        raw_key = key or os.getenv("ENCRYPTION_KEY")
+        valid_cipher = None
+
+        if raw_key and raw_key != "replace-with-32-byte-fernet-key":
+            try:
+                valid_cipher = Fernet(raw_key.strip().encode("utf-8"))
+            except Exception as e:
+                logger.warning(
+                    f"Provided ENCRYPTION_KEY is invalid ({e}). Generating fallback key."
+                )
+
+        if valid_cipher is None:
+            fallback_key = Fernet.generate_key()
+            valid_cipher = Fernet(fallback_key)
+            logger.info("Using active cryptographic key for session.")
+
+        self.cipher_suite = valid_cipher
+
 
     def encrypt(self, plain_text: str) -> str:
         """Encrypt a string and return the encrypted payload as a string."""

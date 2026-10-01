@@ -1,6 +1,8 @@
 services:
   ai-loan-default-app:
-    build: .
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
     container_name: loan_default_prediction_app
     ports:
       - "8000:8000"   # FastAPI Backend & Swagger Docs

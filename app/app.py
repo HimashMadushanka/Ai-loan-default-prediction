@@ -4,14 +4,23 @@ import os
 import requests
 import time
 import pandas as pd
-import mysql.connector
 import bcrypt
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
 sys.path.insert(0, PROJECT_ROOT)
 
+from src.database import (
+    init_db,
+    get_user_by_username,
+    create_user,
+    update_user_password,
+    get_prediction_logs_df,
+)
+
+init_db()
+
 API_URL = "http://127.0.0.1:8000"
+
 
 
 st.set_page_config(
@@ -85,43 +94,25 @@ if not st.session_state.logged_in:
                         st.error("Password must be at least 6 characters.")
                     else:
                         try:
-                            from dotenv import load_dotenv
-
-                            load_dotenv()
-                            conn = mysql.connector.connect(
-                                host=os.getenv("DB_HOST", "127.0.0.1"),
-                                port=int(os.getenv("DB_PORT", "3306")),
-                                user=os.getenv("DB_USER", "root"),
-                                password=os.getenv("DB_PASSWORD", ""),
-                                database=os.getenv("DB_NAME", "loan_system"),
-                            )
-                            cursor = conn.cursor()
-
-                            cursor.execute(
-                                "SELECT user_id FROM users WHERE username = %s",
-                                (reg_username,),
-                            )
-                            if cursor.fetchone():
+                            if get_user_by_username(reg_username):
                                 st.error(
                                     "Username already exists. Please choose another."
                                 )
                             else:
-                                
                                 hashed_pw = bcrypt.hashpw(
                                     reg_password.encode("utf-8"), bcrypt.gensalt()
                                 ).decode("utf-8")
-                                cursor.execute(
-                                    "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
-                                    (reg_username, hashed_pw, "loan_officer"),
+                                create_user(
+                                    username=reg_username,
+                                    password_hash=hashed_pw,
+                                    role="loan_officer",
                                 )
-                                conn.commit()
                                 st.success(
                                     "Account created successfully! You can now log in."
                                 )
-
-                            conn.close()
                         except Exception as e:
                             st.error(f"Database error: {e}")
+
 
             if st.button("Back to Login", use_container_width=True):
                 st.session_state.show_register = False
@@ -159,41 +150,20 @@ if not st.session_state.logged_in:
                         st.error("Password must be at least 6 characters.")
                     else:
                         try:
-                            from dotenv import load_dotenv
-
-                            load_dotenv()
-                            conn = mysql.connector.connect(
-                                host=os.getenv("DB_HOST", "127.0.0.1"),
-                                port=int(os.getenv("DB_PORT", "3306")),
-                                user=os.getenv("DB_USER", "root"),
-                                password=os.getenv("DB_PASSWORD", ""),
-                                database=os.getenv("DB_NAME", "loan_system"),
-                            )
-                            cursor = conn.cursor()
-
-                            cursor.execute(
-                                "SELECT user_id FROM users WHERE username = %s",
-                                (reset_username,),
-                            )
-                            if cursor.fetchone():
-                                
+                            user = get_user_by_username(reset_username)
+                            if user:
                                 hashed_pw = bcrypt.hashpw(
                                     reset_new_password.encode("utf-8"), bcrypt.gensalt()
                                 ).decode("utf-8")
-                                cursor.execute(
-                                    "UPDATE users SET password_hash = %s WHERE username = %s",
-                                    (hashed_pw, reset_username),
-                                )
-                                conn.commit()
+                                update_user_password(reset_username, hashed_pw)
                                 st.success(
                                     "Password successfully reset! You can now log in."
                                 )
                             else:
                                 st.error("Username not found.")
-
-                            conn.close()
                         except Exception as e:
                             st.error(f"Database error: {e}")
+
 
             if st.button("Back to Login", use_container_width=True):
                 st.session_state.show_forgot_password = False
@@ -219,30 +189,13 @@ if not st.session_state.logged_in:
                 if submit_button:
                     if username_input and password_input:
                         try:
-                            from dotenv import load_dotenv
-
-                            load_dotenv()
-                            conn = mysql.connector.connect(
-                                host=os.getenv("DB_HOST", "127.0.0.1"),
-                                port=int(os.getenv("DB_PORT", "3306")),
-                                user=os.getenv("DB_USER", "root"),
-                                password=os.getenv("DB_PASSWORD", ""),
-                                database=os.getenv("DB_NAME", "loan_system"),
-                            )
-                            cursor = conn.cursor(dictionary=True)
-                            cursor.execute(
-                                "SELECT * FROM users WHERE username = %s",
-                                (username_input,),
-                            )
-                            user = cursor.fetchone()
-                            conn.close()
-
+                            user = get_user_by_username(username_input)
                             if user and bcrypt.checkpw(
                                 password_input.encode("utf-8"),
-                                user["password_hash"].encode("utf-8"),
+                                user.password_hash.encode("utf-8"),
                             ):
                                 st.session_state.logged_in = True
-                                st.session_state.username = user["username"]
+                                st.session_state.username = user.username
                                 st.rerun()
                             else:
                                 st.error("Invalid username or password")
@@ -250,6 +203,9 @@ if not st.session_state.logged_in:
                             st.error(f"Database connection error: {e}")
                     else:
                         st.warning("Please enter both username and password")
+
+            st.caption("💡 Default Admin: **admin** / **admin123**")
+
 
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
@@ -469,24 +425,12 @@ if page == "MLOps Dashboard":
     )
 
     try:
-        from dotenv import load_dotenv
-
-        load_dotenv()
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            port=int(os.getenv("DB_PORT", "3306")),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASSWORD", ""),
-            database=os.getenv("DB_NAME", "loan_system"),
-        )
-        df = pd.read_sql_query(
-            "SELECT * FROM prediction_logs ORDER BY timestamp DESC", conn
-        )
-        conn.close()
+        df = get_prediction_logs_df()
 
         if df.empty:
             st.info("🔍 No prediction logs found yet. Make some predictions first!")
             st.stop()
+
 
         import plotly.express as px
         import plotly.graph_objects as go

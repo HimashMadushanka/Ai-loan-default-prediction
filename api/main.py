@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import sys
 import os
 import logging
+import pandas as pd
 
 load_dotenv()
 
@@ -14,6 +15,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from src.prediction import load_model, predict_loan_risk, explain_prediction
 from src.database import init_db, get_db, PredictionLog
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
@@ -167,8 +169,6 @@ def predict_loan(
         loan_purpose=application.loan_purpose,
         credit_history_years=application.credit_history_years,
     )
-
-    import pandas as pd
 
     result["default_probability"] = float(result["default_probability"])
     result["recommended_max_loan_amount"] = float(result["recommended_max_loan_amount"])

@@ -2,9 +2,11 @@
 .venv/
 venv/
 
-# Python cache
+# Python cache & test artifacts
 __pycache__/
 *.py[cod]
+.pytest_cache/
+
 
 # Jupyter
 .ipynb_checkpoints/
