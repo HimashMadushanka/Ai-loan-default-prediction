@@ -1,11 +1,6 @@
 # AI Loan Default Prediction
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python" alt="Python 3.10+" />
-  <img src="https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit" alt="Streamlit" />
-  <img src="https://img.shields.io/badge/ML-XGBoost%20%7C%20Scikit-Learn-8A2BE2?style=for-the-badge" alt="Machine Learning" />
-</p>
+
 
 A full-stack, explainable AI project for evaluating loan default risk using structured credit data. The application combines a machine learning pipeline with a FastAPI backend and an interactive Streamlit dashboard, making it suitable for demos, portfolio projects, and exploratory credit-risk workflows.
 
@@ -99,23 +94,54 @@ AI-loan-default-prediction/
 └── .venv/                       # Local virtual environment
 ```
 
-## Architecture
+## Architecture Design
 
-The project is organized into three main layers:
+The system follows a modular architecture with a clear separation between the user interface, prediction service, data access layer, and machine learning pipeline.
 
-1. Data and Model Layer
-   - Data cleaning, feature engineering, and model training
-   - Stored datasets and trained model artifacts
+```mermaid
+flowchart LR
+    U[Loan Officer / User] --> S[Streamlit Web App]
+    S --> AUTH[Authentication & User Management]
+    S --> API[FastAPI Prediction API]
+    API --> PRED[Prediction Engine]
+    PRED --> MODEL[Trained ML Model]
+    PRED --> PREP[Preprocessing + Feature Pipeline]
+    PREP --> DATA[(Raw / Processed Data)]
+    PRED --> SHAP[Explainability Layer\nSHAP Insights]
+    PRED --> FAIR[Fairness Evaluation]
+    S --> DB[(MySQL Database)]
+    AUTH --> DB
+    DATA --> TRAIN[Training Notebooks / Scripts]
+    TRAIN --> MODEL
+    MODEL --> API
+```
 
-2. API Layer
-   - FastAPI service for prediction requests
-   - Secure access via API-key validation
-   - Swagger and ReDoc documentation
+### 1. Presentation Layer
+- Built with Streamlit for an interactive frontend.
+- Handles user login, registration, password reset, and risk assessment workflows.
+- Displays prediction outputs, explanation panels, and dashboard summaries for loan officers.
 
-3. Application Layer
-   - Streamlit interface for loan officers and users
-   - Login, registration, and evaluation workflows
-   - Dashboard-style presentation of model outputs
+### 2. Application Layer
+- FastAPI exposes REST endpoints for risk prediction and health monitoring.
+- Protects sensitive endpoints with API key validation.
+- Provides Swagger UI and ReDoc for testing and documentation.
+
+### 3. Machine Learning Layer
+- Scripts and notebooks handle data preparation, feature engineering, and model training.
+- Model artifacts are stored in the `models/` directory and loaded at runtime.
+- Explainability and fairness utilities evaluate model behavior and support decision transparency.
+
+### 4. Data Layer
+- Raw credit data is stored in `data/row/` and processed outputs in `data/processed/`.
+- MySQL is used for application user and operational data storage.
+- Database schema is defined in `database/schema.sql`.
+
+### 5. Deployment Layer
+- The project can run locally with Python virtual environments.
+- Docker configuration is included for containerized deployment and testing.
+- The launcher script starts both the backend and frontend together for easier local usage.
+
+This architecture keeps the project easy to extend: the frontend, API, ML logic, and database are decoupled enough to evolve independently without major refactoring.
 
 ## Prerequisites
 
