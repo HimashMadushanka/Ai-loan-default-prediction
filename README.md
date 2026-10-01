@@ -1,52 +1,77 @@
-# Explainable AI Loan Default Prediction
+# AI Loan Default Prediction
 
-An educational full stack project for exploring loan default risk prediction. It combines a scikit-learn/XGBoost modeling workflow with a FastAPI prediction API and a Streamlit interface. SHAP explainability, fairness analysis, and data handling utilities are included in the project.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python" alt="Python 3.10+" />
+  <img src="https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit" alt="Streamlit" />
+  <img src="https://img.shields.io/badge/ML-XGBoost%20%7C%20Scikit-Learn-8A2BE2?style=for-the-badge" alt="Machine Learning" />
+</p>
 
-> **Notice:** This is a portfolio prototype, not a lending or credit decision system. Predictions and explanations should not be used to make real financial decisions.
+A full-stack, explainable AI project for evaluating loan default risk using structured credit data. The application combines a machine learning pipeline with a FastAPI backend and an interactive Streamlit dashboard, making it suitable for demos, portfolio projects, and exploratory credit-risk workflows.
 
-## Features
+> This project is a portfolio prototype and is not intended for real lending decisions or compliance-critical financial use.
 
-- Data preprocessing and feature engineering scripts, plus notebooks for analysis, training, model comparison, and explainability.
-- FastAPI backend with interactive API documentation and API key authentication.
-- Streamlit dashboard for loan officer registration, login, and risk assessment.
-- Model interpretation and fairness utilities.
-- MySQL-backed application and prediction data access.
-- A launcher that starts the API and dashboard together.
+## Overview
 
-## Technology
+This solution is designed to demonstrate how predictive analytics can support decision support in credit risk assessment. It includes:
 
-Python, pandas, NumPy, scikit-learn, XGBoost, SHAP, FastAPI, Streamlit, SQLAlchemy, MySQL Connector, Plotly, and pytest.
+- data cleaning and preprocessing utilities
+- feature engineering and model training workflows
+- explainability with SHAP
+- fairness analysis utilities
+- REST API for predictions
+- user-friendly dashboard for loan officer workflows
+- MySQL-backed storage and secure user authentication
 
-## Repository layout
+## Key Features
+
+- Predictive modeling for loan default risk using scikit-learn and XGBoost
+- Explainable AI insights through SHAP visualizations
+- Fairness evaluation and risk diagnostics
+- FastAPI-based prediction service with API key protection
+- Streamlit web app with login, registration, and reset-password flows
+- Database integration for storing application and user data
+- Docker support for local deployment
+- Notebook-based experimentation for data science and model comparison
+
+## Tech Stack
+
+- Python
+- pandas / NumPy
+- scikit-learn
+- XGBoost
+- SHAP
+- FastAPI
+- Streamlit
+- MySQL / SQLAlchemy
+- Plotly
+- pytest
+- Docker
+
+## Project Structure
 
 ```text
 AI-loan-default-prediction/
-├── .streamlit/
-│   └── config.toml                    # Streamlit configuration
 ├── api/
-│   └── main.py                        # FastAPI application and endpoints
+│   └── main.py                     # FastAPI application and endpoints
 ├── app/
-│   └── app.py                         # Streamlit dashboard
+│   └── app.py                     # Streamlit dashboard
 ├── assets/
-│   └── report_figures/                # Project diagrams and analysis figures
+│   └── report_figures/            # Charts and analysis visuals
 ├── data/
 │   ├── row/
-│   │   └── credit_risk_dataset.csv     # Raw credit risk dataset
-│   ├── processed/
-│   │   ├── cleaned_data.csv            # Cleaned dataset
-│   │   ├── featured_data.csv           # Feature-engineered dataset
-│   │   └── model_data.csv              # Model-ready dataset
-│   └── mlops.db                        # Local SQLite database file
+│   │   └── credit_risk_dataset.csv
+│   └── processed/
+│       ├── cleaned_data.csv
+│       ├── featured_data.csv
+│       └── model_data.csv
 ├── database/
-│   └── schema.sql                      # Database schema
+│   └── schema.sql                 # Database schema
 ├── Docker/
-│   ├── Dockerfile                      # Container image definition
-│   └── docker-compose.yml              # Compose service configuration
+│   ├── Dockerfile
+│   └── docker-compose.yml
 ├── models/
-│   ├── best_model.pkl                  # Model loaded by the API
-│   ├── logistic_regression.pkl
-│   ├── random_forest.pkl
-│   └── xgboost.pkl
+│   └── (trained model artifacts)
 ├── notebooks/
 │   ├── 01_data_understanding.ipynb
 │   ├── 02_data_cleaning.ipynb
@@ -56,133 +81,189 @@ AI-loan-default-prediction/
 │   ├── 06_model_comparison.ipynb
 │   └── 07_model_explainability.ipynb
 ├── src/
-│   ├── credit_bureau_api.py            # Mock credit bureau integration
-│   ├── database.py                     # Database connection and ORM models
-│   ├── encryption.py                   # Encryption utilities
-│   ├── fairness.py                     # Fairness analysis utilities
-│   ├── feature_engineering.py          # Feature preparation
-│   ├── prediction.py                   # Model loading and prediction logic
-│   └── preprocessing.py                # Data cleaning and preprocessing
+│   ├── credit_bureau_api.py
+│   ├── database.py
+│   ├── encryption.py
+│   ├── fairness.py
+│   ├── feature_engineering.py
+│   ├── prediction.py
+│   └── preprocessing.py
 ├── tests/
-│   └── test_prediction.py              # Prediction tests
-├── .env                                # Local environment variables (not committed)
-├── .gitignore                          # Git ignore rules
-├── README.md                           # Project documentation
-├── requirements.txt                    # Python dependencies
-├── run.bat                             # Windows launcher
-└── run.py                              # Cross-platform combined launcher
+│   └── test_prediction.py
+├── .env.example                  # Example environment configuration
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── run.py
+├── run.bat
+└── .venv/                       # Local virtual environment
 ```
 
-## Requirements
+## Architecture
 
-- Python 3.9 or newer (the Docker image uses Python 3.11).
-- MySQL server and a database configured for the application.
-- A trained model artifact at `models/best_model.pkl`. Model files are excluded from Git, so obtain or generate the artifact before starting the API.
+The project is organized into three main layers:
+
+1. Data and Model Layer
+   - Data cleaning, feature engineering, and model training
+   - Stored datasets and trained model artifacts
+
+2. API Layer
+   - FastAPI service for prediction requests
+   - Secure access via API-key validation
+   - Swagger and ReDoc documentation
+
+3. Application Layer
+   - Streamlit interface for loan officers and users
+   - Login, registration, and evaluation workflows
+   - Dashboard-style presentation of model outputs
+
+## Prerequisites
+
+Before running the application, make sure you have:
+
+- Python 3.10 or newer
+- MySQL server available locally or in Docker
+- A trained model artifact stored in the `models/` directory
+- Access to create a local environment and install project dependencies
 
 ## Setup
 
-Clone the repository and enter its directory:
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/HimashMadushanka/Ai-loan-default-prediction.git
+git clone <your-repository-url>
 cd AI-loan-default-prediction
 ```
 
-Create and activate a virtual environment, then install dependencies:
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
 ```
 
-Windows PowerShell:
+Activate it:
+
+- Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-macOS/Linux:
+- macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
+### 3. Install dependencies
+
 ```bash
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Create a `.env` file in the project root and set values appropriate for your local MySQL installation:
+### 4. Configure environment variables
+
+Create a `.env` file in the project root with settings similar to:
 
 ```env
-API_KEY=replace-with-a-secret-key
+API_KEY=your-secret-api-key
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=replace-with-your-database-password
+DB_PASSWORD=your-password
 DB_NAME=loan_system
 ```
 
-Create the `loan_system` database before running the application. Never commit `.env` or use development credentials in a deployed environment. The API has a development API key fallback; configure your own `API_KEY` before use.
+> Never commit real secrets or credentials to version control.
 
-## Run the application
+### 5. Prepare the database
 
-The combined launcher starts the API at `127.0.0.1:8000` and Streamlit at port `8501`:
+Create the database and ensure the schema exists:
+
+```sql
+CREATE DATABASE loan_system;
+```
+
+Then load the schema from `database/schema.sql` if required by your environment.
+
+### 6. Train or place a model
+
+The project expects a model artifact such as `models/best_model.pkl` to be available before API requests are processed. If it is not present yet, generate it using the training notebooks or scripts in the project workflow.
+
+## Run the Application
+
+### Option 1: Run both services together
 
 ```bash
 python run.py
 ```
 
-On Windows, you can also run:
+On Windows, this also works via:
 
 ```bat
 run.bat
 ```
 
-Use `Ctrl+C` in the launcher terminal to stop the services. The launcher opens the dashboard in a browser when it is ready.
+This launches:
 
-To start services separately, use two terminals with the virtual environment activated:
+- FastAPI backend at `http://127.0.0.1:8000`
+- Streamlit dashboard at `http://localhost:8501`
+
+### Option 2: Run services separately
+
+Terminal 1:
 
 ```bash
 python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
+Terminal 2:
+
 ```bash
 python -m streamlit run app/app.py --server.port 8501
 ```
 
-The Streamlit app connects to the API at `http://127.0.0.1:8000`.
+## API Documentation
 
-## API endpoints and authentication
+Once the API is running, access the interactive documentation at:
 
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 - Health check: `http://127.0.0.1:8000/health`
 
-Protected API requests require the `X-API-Key` header, set to the value of `API_KEY` in `.env`.
+Protected routes require the `X-API-Key` header using the value from your `.env` file.
 
-## Data preparation and model training
+## Data and Modeling Workflow
 
-The preprocessing and feature engineering scripts are available here:
+The repository includes the full machine learning lifecycle:
 
 ```bash
 python src/preprocessing.py
 python src/feature_engineering.py
 ```
 
-The notebooks contain the exploratory analysis and model training workflow. Training a model artifact is required if `models/best_model.pkl` is not already available. The API loads that file during startup.
+Use the notebooks under `notebooks/` for:
 
-## Docker
+- exploratory data analysis
+- preprocessing and cleaning
+- feature engineering
+- model evaluation and comparison
+- explainability analysis
 
-The Docker files are in `Docker/`. From the repository root, build and start the Compose service with:
+## Docker Deployment
+
+From the project root, build and run the container stack:
 
 ```bash
 docker compose -f Docker/docker-compose.yml up --build
 ```
 
-The Compose configuration expects a MySQL server reachable from the container and defines development database/API settings. Review and replace those values before using it outside a local environment. The model artifact must also be available in the build context.
+This setup is intended primarily for local development and testing. Review environment values before using it in any external deployment.
 
-## Tests
+## Testing
 
-Run the test suite from the project root:
+Run the test suite with:
 
 ```bash
 pytest tests/ -v
@@ -190,8 +271,22 @@ pytest tests/ -v
 
 ## Limitations
 
-This project demonstrates software and machine learning techniques; it does not establish that the model is accurate, fair, secure, or legally compliant for real lending. Real use would require appropriate data governance, independent validation, privacy and security controls, fairness and compliance review, monitoring, and qualified human oversight.
+This project is best understood as a learning and demonstration platform. It does not replace formal credit-risk governance, legal review, or production ML monitoring. Real-world lending systems require validation, fairness auditing, explainability review, human oversight, and compliance controls.
+
+## Contributing
+
+Contributions are welcome. If you plan to improve the codebase, consider:
+
+- adding better model evaluation metrics
+- improving dashboard usability
+- strengthening API validation and error handling
+- expanding fairness and drift monitoring
+- enhancing documentation and deployment setup
 
 ## Author
 
-**Himash Madushanka**
+Himash Madushanka
+
+## Disclaimer
+
+The content here is for educational and portfolio use only. It should not be used as a real-world credit decisioning system without formal review and domain-specific compliance validation.
