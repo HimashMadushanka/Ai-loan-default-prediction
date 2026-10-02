@@ -67,29 +67,47 @@ graph TD
 
 ```text
 AI-loan-default-prediction/
+│
+├── .streamlit/
+│   └── config.toml
+│
 ├── api/
 │   └── main.py
+│
 ├── app/
 │   └── app.py
+│
+├── assets/
+│   ├── Correlation Matrix of Numeric Features.png
+│   ├── Global Feature Importance.png
+│   ├── Home Ownership vs Default.png
+│   ├── Income vs Loan Amount.png
+│   ├── Loan Grade vs Default.png
+│   ├── Loan-to-Income Ratio Distribution.png
+│   └── Model Performance Comparison.png
+│
 ├── data/
-│   ├── mlops.db
 │   ├── processed/
 │   │   ├── cleaned_data.csv
 │   │   ├── featured_data.csv
 │   │   └── model_data.csv
 │   └── row/
 │       └── credit_risk_dataset.csv
+│
 ├── database/
 │   └── schema.sql
+│
 ├── Docker/
 │   ├── .dockerignore
 │   ├── docker-compose.yml
 │   └── Dockerfile
+│
 ├── models/
 │   ├── best_model.pkl
 │   ├── logistic_regression.pkl
 │   ├── random_forest.pkl
 │   └── xgboost.pkl
+│
 ├── notebooks/
 │   ├── 01_data_understanding.ipynb
 │   ├── 02_data_cleaning.ipynb
@@ -98,24 +116,35 @@ AI-loan-default-prediction/
 │   ├── 05_model_training.ipynb
 │   ├── 06_model_comparison.ipynb
 │   └── 07_model_explainability.ipynb
+│
 ├── src/
+│   ├── __init__.py
+│   ├── config.py
 │   ├── credit_bureau_api.py
 │   ├── database.py
 │   ├── encryption.py
 │   ├── fairness.py
 │   ├── feature_engineering.py
+│   ├── logging_config.py
 │   ├── prediction.py
 │   └── preprocessing.py
+│
 ├── tests/
+│   ├── test_api.py
+│   ├── test_config.py
+│   ├── test_database.py
+│   ├── test_encryption.py
+│   ├── test_fairness.py
 │   └── test_prediction.py
-├── .env
+│
 ├── .gitignore
-├── Explainable_AI_Loan_Default_Prediction_Report.pdf
-├── generate_report.py
+├── loan_system.db
+├── pytest.ini
 ├── README.md
 ├── requirements.txt
 ├── run.bat
 └── run.py
+
 
 
 ```
