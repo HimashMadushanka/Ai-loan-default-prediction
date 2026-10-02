@@ -17,15 +17,13 @@ def test_health_endpoint(client):
 
 
 def test_model_info_requires_auth(client):
-    # Without header
+  
     res_no_key = client.get("/model/info")
     assert res_no_key.status_code == 401
 
-    # With invalid header
     res_bad_key = client.get("/model/info", headers={"X-API-Key": "wrong-key"})
     assert res_bad_key.status_code == 403
 
-    # With valid header
     res_valid = client.get("/model/info", headers={"X-API-Key": API_KEY})
     assert res_valid.status_code == 200
     data = res_valid.json()
@@ -55,8 +53,8 @@ def test_predict_endpoint_valid_payload(client):
 
 def test_predict_endpoint_invalid_payload(client):
     payload = {
-        "age": 12,  # Invalid age < 18
-        "income": -500.0,  # Invalid negative income
+        "age": 12,  
+        "income": -500.0,  
         "employment_years": 0.0,
         "home_ownership": "UNKNOWN",
         "loan_amount": 1000.0,

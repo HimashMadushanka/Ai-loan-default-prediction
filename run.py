@@ -64,7 +64,7 @@ def wait_for_api(api_process: subprocess.Popen, timeout: float = 20.0) -> bool:
     url = f"http://{API_HOST}:{API_PORT}/docs"
     while time.time() - start_time < timeout:
         if api_process.poll() is not None:
-            return False  # API process crashed
+            return False 
         try:
             with urllib.request.urlopen(url, timeout=1.0) as resp:
                 if resp.status == 200:
@@ -158,13 +158,13 @@ def main():
             print(f"👉 Backend API Docs: http://{API_HOST}:{API_PORT}/docs")
             print("\n(Press Ctrl+C in this terminal to stop both servers)\n")
 
-        # Keep running until user stops
+      
         streamlit_process.wait()
 
     except KeyboardInterrupt:
         print("\n🛑 Received stop signal. Shutting down...")
     finally:
-        # Graceful cleanup
+       
         if streamlit_process and streamlit_process.poll() is None:
             try:
                 streamlit_process.terminate()

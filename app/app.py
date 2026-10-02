@@ -908,6 +908,105 @@ if page == "MLOps Dashboard":
     st.stop()
 
 
+if page == "Compliance & Fairness":
+    st.markdown(
+        """
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+            .hero-header {
+                background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+                border-radius: 20px;
+                padding: 32px 40px;
+                margin-bottom: 24px;
+                border: 1px solid rgba(139,92,246,0.25);
+                box-shadow: 0 8px 32px rgba(139,92,246,0.15);
+            }
+            .hero-title {
+                color: #ffffff;
+                font-size: 28px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                letter-spacing: -0.5px;
+            }
+            .hero-subtitle {
+                color: #a78bfa;
+                font-size: 15px;
+                font-weight: 500;
+            }
+            .compliance-card {
+                background: rgba(30, 41, 59, 0.7);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="hero-header"><div class="hero-title">⚖️ Legal & Fairness Compliance</div><div class="hero-subtitle">Mathematical Disparate Impact Evaluation (Four-Fifths Rule)</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="compliance-card">
+            <h4 style="margin-top:0; color:#f1f5f9;">Demographic Parity & Fair Lending Regulations</h4>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:0;">
+                Consumer financial protection regulations (e.g., CFPB, ECOA) require lenders to ensure credit models do not produce unjustified adverse impact against protected demographic groups.
+                This module executes an empirical bias test comparing approval rates across age segments using the <strong>80% (4/5ths) Disparate Impact</strong> threshold.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Run Disparate Impact Analysis (Age Bias)", type="primary"):
+        with st.spinner("Evaluating model predictions across demographic subsets..."):
+            from src.fairness import FairnessEvaluator
+
+            evaluator = FairnessEvaluator()
+            result = evaluator.check_age_bias(age_threshold=30)
+
+            if result["status"] == "success":
+                st.success("Fairness analysis completed successfully!")
+                col1, col2, col3 = st.columns(3)
+                col1.metric(
+                    "Younger Group Approval Rate (<= 30)",
+                    f"{result['young_approval_rate']*100:.1f}%",
+                )
+                col2.metric(
+                    "Older Group Approval Rate (> 30)",
+                    f"{result['old_approval_rate']*100:.1f}%",
+                )
+                col3.metric(
+                    "Disparate Impact Ratio",
+                    f"{result['disparate_impact_ratio']:.3f}",
+                    delta=(
+                        "Passes 0.8 Threshold"
+                        if result["four_fifths_rule_passed"]
+                        else "Fails 0.8 Threshold"
+                    ),
+                    delta_color=(
+                        "normal" if result["four_fifths_rule_passed"] else "inverse"
+                    ),
+                )
+
+                if result["four_fifths_rule_passed"]:
+                    st.info(f"**Conclusion:** {result['message']}")
+                else:
+                    st.warning(f"**Conclusion:** {result['message']}")
+            else:
+                st.error(
+                    f"Error running analysis: {result.get('message', 'Unknown error')}"
+                )
+
+    st.stop()
+
+
 st.title("💳 AI Loan Default Prediction")
 
 
@@ -1240,52 +1339,3 @@ if st.session_state.loan_result is not None:
             "Final disbursement remains subject to the bank's approval, compliance, "
             "and document-authentication procedures."
         )
-
-elif page == "Compliance & Fairness":
-    st.markdown(
-        '<div class="hero-header"><div class="hero-title">⚖️ Legal & Fairness Compliance</div><div class="hero-subtitle">Mathematical Disparate Impact Evaluation</div></div>',
-        unsafe_allow_html=True,
-    )
-
-    st.write(
-        "Financial regulations (e.g., CFPB) require proof that ML models do not unfairly discriminate against protected classes."
-    )
-
-    if st.button("Run Disparate Impact Analysis (Age Bias)", type="primary"):
-        with st.spinner("Evaluating model predictions across demographic subsets..."):
-            import sys
-            import os
-
-            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from src.fairness import FairnessEvaluator
-
-            evaluator = FairnessEvaluator()
-            result = evaluator.check_age_bias(age_threshold=30)
-
-            if result["status"] == "success":
-                st.success("Analysis Complete!")
-                col1, col2, col3 = st.columns(3)
-                col1.metric(
-                    "Young Approval Rate", f"{result['young_approval_rate']*100:.1f}%"
-                )
-                col2.metric(
-                    "Older Approval Rate", f"{result['old_approval_rate']*100:.1f}%"
-                )
-                col3.metric(
-                    "Disparate Impact Ratio",
-                    f"{result['disparate_impact_ratio']:.3f}",
-                    delta=(
-                        "Passes 0.8 Threshold"
-                        if result["four_fifths_rule_passed"]
-                        else "Fails 0.8 Threshold"
-                    ),
-                    delta_color=(
-                        "normal" if result["four_fifths_rule_passed"] else "inverse"
-                    ),
-                )
-
-                st.info(f"**Conclusion:** {result['message']}")
-            else:
-                st.error(
-                    f"Error running analysis: {result.get('message', 'Unknown error')}"
-                )

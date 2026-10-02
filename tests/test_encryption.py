@@ -18,7 +18,7 @@ def test_empty_string_encryption():
 
 
 def test_invalid_key_safe_fallback():
-    # Service must not crash even if handed bad padding or corrupted key string
+    
     bad_service = EncryptionService(key="replace-with-32-byte-fernet-key")
     encrypted = bad_service.encrypt("test-data")
     assert bad_service.decrypt(encrypted) == "test-data"
