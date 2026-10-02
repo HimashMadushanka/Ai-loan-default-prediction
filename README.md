@@ -314,4 +314,3 @@ If this were to be deployed in a real-world financial institution, the following
 ## 👨‍💻 Author
 **Himash Madushanka**
 
-Feel free to reach out or open an issue if you have questions or suggestions!
