@@ -1,72 +1,95 @@
-# AI Loan Default Prediction
+# Explainable AI Loan Default Prediction
 
 
+An **end-to-end Machine Learning ecosystem** designed to predict loan default risks while prioritizing **Explainable AI (XAI)**, data security, and fairness. This project is built as a robust, enterprise-grade prototype to demonstrate how AI can be integrated into financial services responsibly and transparently.
 
-A full-stack, explainable AI project for evaluating loan default risk using structured credit data. The application combines a machine learning pipeline with a FastAPI backend and an interactive Streamlit dashboard, making it suitable for demos, portfolio projects, and exploratory credit-risk workflows.
+---
 
-> This project is a portfolio prototype and is not intended for real lending decisions or compliance-critical financial use.
+## 📖 Overview
 
-## Overview
+In the financial sector, a "black-box" model is often unacceptable due to regulatory requirements and the need for human oversight. This project bridges the gap between complex ML predictions and human interpretability. 
 
-This solution is designed to demonstrate how predictive analytics can support decision support in credit risk assessment. It includes:
+It provides an end-to-end solution featuring:
+1. A **data processing pipeline** that handles class imbalance and feature engineering.
+2. A **predictive model (XGBoost)** that estimates the probability of default.
+3. An **Explainability layer (SHAP)** that explains exactly *why* a decision was made.
+4. A secure **FastAPI backend** that serves the model and handles mock third-party integrations (e.g., Credit Bureaus).
+5. An interactive **Streamlit Dashboard** for loan officers to evaluate applications in real-time.
 
-- data cleaning and preprocessing utilities
-- feature engineering and model training workflows
-- explainability with SHAP
-- fairness analysis utilities
-- REST API for predictions
-- user-friendly dashboard for loan officer workflows
-- MySQL-backed storage and secure user authentication
+---
 
-## Key Features
+## ✨ Key Features & Business Value
 
-- Predictive modeling for loan default risk using scikit-learn and XGBoost
-- Explainable AI insights through SHAP visualizations
-- Fairness evaluation and risk diagnostics
-- FastAPI-based prediction service with API key protection
-- Streamlit web app with login, registration, and reset-password flows
-- Database integration for storing application and user data
-- Docker support for local deployment
-- Notebook-based experimentation for data science and model comparison
+- **Explainable AI (SHAP):** Provides a transparent breakdown of feature contributions for every single prediction, empowering loan officers to make informed decisions rather than blindly trusting an algorithm.
+- **Microservices Architecture:** Decouples the ML model serving (FastAPI) from the user interface (Streamlit) for better scalability and separation of concerns.
+- **Enterprise-Grade Security:** Simulates PII data encryption (using `cryptography` Fernet) to demonstrate how sensitive applicant data should be handled in production.
+- **Fairness & Bias Evaluation:** Incorporates fairness checks to ensure the model does not discriminate based on protected attributes, aligning with regulatory compliance standards.
+- **Resilient Integrations:** Mocks enterprise external API calls (e.g., pulling Credit Scores) with robust retry logic and error handling.
+- **Automated Testing:** Uses `pytest` to ensure pipeline and endpoint reliability.
 
-## Tech Stack
+---
 
-- Python
-- pandas / NumPy
-- scikit-learn
-- XGBoost
-- SHAP
-- FastAPI
-- Streamlit
-- MySQL / SQLAlchemy
-- Plotly
-- pytest
-- Docker
+## 🛠️ Technology Stack
 
-## Project Structure
+| Category | Technologies |
+| :--- | :--- |
+| **Machine Learning** | Scikit-Learn, XGBoost, SHAP, Pandas, NumPy, imbalanced-learn |
+| **Backend & API** | FastAPI, Pydantic, SQLAlchemy, Uvicorn, httpx |
+| **Frontend UI** | Streamlit, Plotly |
+| **Security & Auth** | bcrypt, Python Cryptography (Fernet) |
+| **Testing** | Pytest |
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    User([Loan Officer]) -->|Inputs Data| UI(Streamlit Dashboard)
+    UI -->|REST API Request| API(FastAPI Backend)
+    
+    API -->|1. Validate Data| Valid(Pydantic Models)
+    API -->|2. Check Bureau| MockAPI(Mock Credit Bureau API)
+    API -->|3. Encrypt PII| Sec(Encryption Service)
+    
+    API -->|4. Request Prediction| Model(XGBoost Model)
+    Model -->|5. Generate SHAP| Explainer(SHAP Explainer)
+    
+    Model -.-> API
+    Explainer -.-> API
+    
+    API -->|6. Return Assessment| UI
+```
+
+---
+
+## 📁 Project Structure
 
 ```text
 AI-loan-default-prediction/
 ├── api/
-│   └── main.py                     # FastAPI application and endpoints
+│   └── main.py
 ├── app/
-│   └── app.py                     # Streamlit dashboard
-├── assets/
-│   └── report_figures/            # Charts and analysis visuals
+│   └── app.py
 ├── data/
-│   ├── row/
-│   │   └── credit_risk_dataset.csv
-│   └── processed/
-│       ├── cleaned_data.csv
-│       ├── featured_data.csv
-│       └── model_data.csv
+│   ├── mlops.db
+│   ├── processed/
+│   │   ├── cleaned_data.csv
+│   │   ├── featured_data.csv
+│   │   └── model_data.csv
+│   └── row/
+│       └── credit_risk_dataset.csv
 ├── database/
-│   └── schema.sql                 # Database schema
+│   └── schema.sql
 ├── Docker/
-│   ├── Dockerfile
-│   └── docker-compose.yml
+│   ├── .dockerignore
+│   ├── docker-compose.yml
+│   └── Dockerfile
 ├── models/
-│   └── (trained model artifacts)
+│   ├── best_model.pkl
+│   ├── logistic_regression.pkl
+│   ├── random_forest.pkl
+│   └── xgboost.pkl
 ├── notebooks/
 │   ├── 01_data_understanding.ipynb
 │   ├── 02_data_cleaning.ipynb
@@ -85,234 +108,149 @@ AI-loan-default-prediction/
 │   └── preprocessing.py
 ├── tests/
 │   └── test_prediction.py
-├── .env.example                  # Example environment configuration
+├── .env
 ├── .gitignore
+├── Explainable_AI_Loan_Default_Prediction_Report.pdf
+├── generate_report.py
 ├── README.md
 ├── requirements.txt
-├── run.py
 ├── run.bat
-└── .venv/                       # Local virtual environment
+└── run.py
+
+
 ```
 
-## Architecture Design
+---
 
-The system follows a modular architecture with a clear separation between the user interface, prediction service, data access layer, and machine learning pipeline.
+## ⚙️ Setup & Installation
 
-```mermaid
-flowchart LR
-    U[Loan Officer / User] --> S[Streamlit Web App]
-    S --> AUTH[Authentication & User Management]
-    S --> API[FastAPI Prediction API]
-    API --> PRED[Prediction Engine]
-    PRED --> MODEL[Trained ML Model]
-    PRED --> PREP[Preprocessing + Feature Pipeline]
-    PREP --> DATA[(Raw / Processed Data)]
-    PRED --> SHAP[Explainability Layer\nSHAP Insights]
-    PRED --> FAIR[Fairness Evaluation]
-    S --> DB[(MySQL Database)]
-    AUTH --> DB
-    DATA --> TRAIN[Training Notebooks / Scripts]
-    TRAIN --> MODEL
-    MODEL --> API
-```
+### Prerequisites
+- **Python 3.9+**
+- Git
 
-### 1. Presentation Layer
-- Built with Streamlit for an interactive frontend.
-- Handles user login, registration, password reset, and risk assessment workflows.
-- Displays prediction outputs, explanation panels, and dashboard summaries for loan officers.
-
-### 2. Application Layer
-- FastAPI exposes REST endpoints for risk prediction and health monitoring.
-- Protects sensitive endpoints with API key validation.
-- Provides Swagger UI and ReDoc for testing and documentation.
-
-### 3. Machine Learning Layer
-- Scripts and notebooks handle data preparation, feature engineering, and model training.
-- Model artifacts are stored in the `models/` directory and loaded at runtime.
-- Explainability and fairness utilities evaluate model behavior and support decision transparency.
-
-### 4. Data Layer
-- Raw credit data is stored in `data/row/` and processed outputs in `data/processed/`.
-- MySQL is used for application user and operational data storage.
-- Database schema is defined in `database/schema.sql`.
-
-### 5. Deployment Layer
-- The project can run locally with Python virtual environments.
-- Docker configuration is included for containerized deployment and testing.
-- The launcher script starts both the backend and frontend together for easier local usage.
-
-This architecture keeps the project easy to extend: the frontend, API, ML logic, and database are decoupled enough to evolve independently without major refactoring.
-
-## Prerequisites
-
-Before running the application, make sure you have:
-
-- Python 3.10 or newer
-- MySQL server available locally or in Docker
-- A trained model artifact stored in the `models/` directory
-- Access to create a local environment and install project dependencies
-
-## Setup
-
-### 1. Clone the repository
-
+### 1. Clone the Repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/HimashMadushanka/Ai-loan-default-prediction.git
 cd AI-loan-default-prediction
 ```
 
-### 2. Create a virtual environment
-
+### 2. Create a Virtual Environment
 ```bash
 python -m venv .venv
-```
-
-Activate it:
-
-- Windows PowerShell:
-
-```powershell
+# On Windows:
 .\.venv\Scripts\Activate.ps1
-```
-
-- macOS/Linux:
-
-```bash
+# On Linux/Mac:
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
-
+### 3. Install Dependencies
 ```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
-
-Create a `.env` file in the project root with settings similar to:
-
+### 4. Configure Environment Variables
+Create a `.env` file in the root directory with the following structure:
 ```env
-API_KEY=your-secret-api-key
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your-password
-DB_NAME=loan_system
+API_KEY=your_secure_api_key_here
+ENCRYPTION_KEY=your_fernet_encryption_key_here
 ```
+*(Note: You can generate a Fernet key using the `cryptography` library in Python).*
 
-> Never commit real secrets or credentials to version control.
+---
 
-### 5. Prepare the database
+## 🚀 Running the Ecosystem
 
-Create the database and ensure the schema exists:
+### ⚡ Quick Start: Run Full Project via Terminal
+To run the entire application ecosystem from your terminal, it is best to use **two separate terminal tabs/windows**. Make sure your virtual environment (`.venv`) is activated in both.
 
-```sql
-CREATE DATABASE loan_system;
-```
-
-Then load the schema from `database/schema.sql` if required by your environment.
-
-### 6. Train or place a model
-
-The project expects a model artifact such as `models/best_model.pkl` to be available before API requests are processed. If it is not present yet, generate it using the training notebooks or scripts in the project workflow.
-
-## Run the Application
-
-### Option 1: Run both services together
-
+**Terminal 1 (Data Pipeline & Backend API):**
 ```bash
-python run.py
+# 1. (Optional) Run the data pipeline
+python src/preprocessing.py
+python src/feature_engineering.py
+
+# 2. Start the FastAPI Server
+uvicorn api.main:app --reload
 ```
 
-On Windows, this also works via:
-
-```bat
-run.bat
-```
-
-This launches:
-
-- FastAPI backend at `http://127.0.0.1:8000`
-- Streamlit dashboard at `http://localhost:8501`
-
-### Option 2: Run services separately
-
-Terminal 1:
-
+**Terminal 2 (Frontend Dashboard):**
 ```bash
-python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+# 3. Start the Streamlit Dashboard
+streamlit run app/app.py
 ```
+*(The dashboard will automatically open in your default web browser and connect to the API).*
 
-Terminal 2:
+---
 
-```bash
-python -m streamlit run app/app.py --server.port 8501
-```
-
-## API Documentation
-
-Once the API is running, access the interactive documentation at:
-
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
-- Health check: `http://127.0.0.1:8000/health`
-
-Protected routes require the `X-API-Key` header using the value from your `.env` file.
-
-## Data and Modeling Workflow
-
-The repository includes the full machine learning lifecycle:
-
+### 1. Model Retraining (Optional)
+If you wish to retrain the models from scratch using the raw data:
 ```bash
 python src/preprocessing.py
 python src/feature_engineering.py
 ```
+*(You can then run `notebooks/05_model_training.ipynb` to generate the `.pkl` artifacts).*
 
-Use the notebooks under `notebooks/` for:
-
-- exploratory data analysis
-- preprocessing and cleaning
-- feature engineering
-- model evaluation and comparison
-- explainability analysis
-
-## Docker Deployment
-
-From the project root, build and run the container stack:
-
+### 2. Launch the FastAPI Backend
+Start the robust REST API that serves the model:
 ```bash
-docker compose -f Docker/docker-compose.yml up --build
+uvicorn api.main:app --reload
+```
+- **Interactive Swagger Docs:** `http://localhost:8000/docs`
+- **ReDoc:** `http://localhost:8000/redoc`
+
+### 3. Launch the Streamlit Dashboard
+In a new terminal window (with the virtual environment activated), start the user interface:
+```bash
+streamlit run app/app.py
+```
+The dashboard will open automatically in your browser, allowing you to input applicant data and view the real-time risk assessment and SHAP explanations.
+
+### 4. Single-Command All-in-One Launcher
+Alternatively, run both FastAPI and Streamlit together with automatic port cleanup:
+```bash
+python run.py
+# Or on Windows:
+run.bat
 ```
 
-This setup is intended primarily for local development and testing. Review environment values before using it in any external deployment.
+### 5. Run with Docker (Containerized)
+Run the entire stack in an isolated container without setting up local Python dependencies:
+```bash
+# Start container in background
+docker compose up -d
 
-## Testing
+# Check status
+docker compose ps
 
-Run the test suite with:
+# View logs
+docker compose logs -f
 
+# Stop container
+docker compose down
+```
+
+---
+
+## 🧪 Testing
+
+To ensure the integrity of the predictive pipeline and endpoints, run the automated test suite:
 ```bash
 pytest tests/ -v
 ```
 
-## Limitations
+---
 
-This project is best understood as a learning and demonstration platform. It does not replace formal credit-risk governance, legal review, or production ML monitoring. Real-world lending systems require validation, fairness auditing, explainability review, human oversight, and compliance controls.
+## ⚠️ Important Considerations & Limitations
 
-## Contributing
+This project is built as a **portfolio and educational prototype** to demonstrate full-stack ML engineering capabilities. 
 
-Contributions are welcome. If you plan to improve the codebase, consider:
+If this were to be deployed in a real-world financial institution, the following would be required:
+- **Regulatory Compliance:** Strict mathematical proof to regulators (e.g., CFPB) that the model does not violate fair lending laws.
+- **Production Infrastructure:** Deployment via Docker/Kubernetes, CI/CD pipelines (GitHub Actions), and robust model monitoring (MLOps) for data drift.
+- **Real Integrations:** Replacing mock endpoints with secure, highly available connections to actual credit bureaus (Equifax, Experian).
 
-- adding better model evaluation metrics
-- improving dashboard usability
-- strengthening API validation and error handling
-- expanding fairness and drift monitoring
-- enhancing documentation and deployment setup
+---
 
-## Author
-
-Himash Madushanka
-
-## Disclaimer
-
-The content here is for educational and portfolio use only. It should not be used as a real-world credit decisioning system without formal review and domain-specific compliance validation.
+## 👨‍💻 Author
+**Himash Madushanka**  
+Feel free to reach out or open an issue if you have questions or suggestions!
