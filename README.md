@@ -154,8 +154,11 @@ AI-loan-default-prediction/
 ## ⚙️ Setup & Installation
 
 ### Prerequisites
-- **Python 3.9+**
+- Python 3.10+
 - Git
+- MySQL server available locally or via Docker (optional if using SQLite fallback)
+- A trained model artifact in the `models/` directory
+- Access to create and activate a virtual environment
 
 ### 1. Clone the Repository
 ```bash
@@ -166,9 +169,17 @@ cd AI-loan-default-prediction
 ### 2. Create a Virtual Environment
 ```bash
 python -m venv .venv
-# On Windows:
+```
+
+Activate it:
+
+- Windows PowerShell:
+```powershell
 .\.venv\Scripts\Activate.ps1
-# On Linux/Mac:
+```
+
+- macOS/Linux:
+```bash
 source .venv/bin/activate
 ```
 
@@ -178,12 +189,132 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables
-Create a `.env` file in the root directory with the following structure:
+Create a `.env` file in the project root with the following values:
 ```env
 API_KEY=your_secure_api_key_here
 ENCRYPTION_KEY=your_fernet_encryption_key_here
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your-password
+DB_NAME=loan_system
 ```
-*(Note: You can generate a Fernet key using the `cryptography` library in Python).*
+
+> Never commit real secrets or credentials to version control.
+
+### 5. Prepare the Database
+If MySQL is being used, create the database first:
+```sql
+CREATE DATABASE loan_system;
+```
+
+Then load the schema from `database/schema.sql` if required by your environment.
+
+### 6. Train or Place a Model
+The API expects a model artifact such as `models/best_model.pkl` before predictions can be processed. If the file is not present, train the model using the notebooks or project scripts first.
+
+---
+
+### ⚡ Quick Start: Run Full Project via Terminal
+To run the entire application ecosystem from your terminal, it is best to use two separate terminal tabs or windows. Make sure your virtual environment (`.venv`) is activated in both.
+
+**Terminal 1 (Data Pipeline & Backend API):**
+```bash
+# 1. (Optional) Run the data pipeline
+python src/preprocessing.py
+python src/feature_engineering.py
+
+# 2. Start the FastAPI Server
+uvicorn api.main:app --reload
+```
+
+**Terminal 2 (Frontend Dashboard):**
+```bash
+# 3. Start the Streamlit Dashboard
+streamlit run app/app.py
+```
+
+> The dashboard will open in your default browser and connect to the API automatically.
+
+---
+
+### 1. Model Retraining (Optional)
+If you wish to retrain the models from scratch using the raw data:
+```bash
+python src/preprocessing.py
+python src/feature_engineering.py
+```
+
+> You can then run the notebook under `notebooks/05_model_training.ipynb` to generate the `.pkl` artifacts.
+
+### 2. Launch the FastAPI Backend
+Start the REST API that serves the model:
+```bash
+uvicorn api.main:app --reload
+```
+
+- Swagger Docs: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+### 3. Launch the Streamlit Dashboard
+In a new terminal window with the virtual environment activated, start the frontend:
+```bash
+streamlit run app/app.py
+```
+
+The dashboard will open automatically in your browser, allowing you to input applicant data and view the real-time risk assessment and SHAP explanations.
+
+### 4. Single-Command All-in-One Launcher
+Run both FastAPI and Streamlit together:
+```bash
+python run.py
+# Or on Windows:
+run.bat
+```
+
+### 5. Run with Docker (Containerized)
+Run the entire stack in an isolated container:
+```bash
+# Start container in background
+docker compose up -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Stop container
+docker compose down
+```
+
+---
+
+## 🧪 Testing
+
+To ensure the integrity of the predictive pipeline and endpoints, run the automated test suite:
+```bash
+pytest tests/ -v
+```
+
+---
+
+## ⚠️ Important Considerations & Limitations
+
+This project is built as a portfolio and educational prototype to demonstrate full-stack ML engineering capabilities.
+
+If this were to be deployed in a real-world financial institution, the following would be required:
+- Regulatory compliance and fairness validation
+- Production infrastructure and model monitoring
+- Secure integration with actual credit bureau systems
+
+---
+
+## 👨‍💻 Author
+**Himash Madushanka**
+
+Feel free to reach out or open an issue if you have questions or suggestions!
+
 
 ---
 
