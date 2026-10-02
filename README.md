@@ -42,23 +42,24 @@ It provides an end-to-end solution featuring:
 ---
 
 ## 🏗️ System Architecture
+The system follows a modular architecture with a clear separation between the user interface, prediction service, data access layer, and machine learning pipeline.
 
 ```mermaid
-graph TD
-    User([Loan Officer]) -->|Inputs Data| UI(Streamlit Dashboard)
-    UI -->|REST API Request| API(FastAPI Backend)
-    
-    API -->|1. Validate Data| Valid(Pydantic Models)
-    API -->|2. Check Bureau| MockAPI(Mock Credit Bureau API)
-    API -->|3. Encrypt PII| Sec(Encryption Service)
-    
-    API -->|4. Request Prediction| Model(XGBoost Model)
-    Model -->|5. Generate SHAP| Explainer(SHAP Explainer)
-    
-    Model -.-> API
-    Explainer -.-> API
-    
-    API -->|6. Return Assessment| UI
+flowchart LR
+    U[Loan Officer / User] --> S[Streamlit Web App]
+    S --> AUTH[Authentication & User Management]
+    S --> API[FastAPI Prediction API]
+    API --> PRED[Prediction Engine]
+    PRED --> MODEL[Trained ML Model]
+    PRED --> PREP[Preprocessing + Feature Pipeline]
+    PREP --> DATA[(Raw / Processed Data)]
+    PRED --> SHAP[Explainability Layer\nSHAP Insights]
+    PRED --> FAIR[Fairness Evaluation]
+    S --> DB[(MySQL Database)]
+    AUTH --> DB
+    DATA --> TRAIN[Training Notebooks / Scripts]
+    TRAIN --> MODEL
+    MODEL --> API
 ```
 
 ---
