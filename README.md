@@ -1,6 +1,5 @@
 # Explainable AI Loan Default Prediction
 
-
 An **end-to-end Machine Learning ecosystem** designed to predict loan default risks while prioritizing **Explainable AI (XAI)**, data security, and fairness. This project is built as a robust, enterprise-grade prototype to demonstrate how AI can be integrated into financial services responsibly and transparently.
 
 ---
@@ -145,8 +144,6 @@ AI-loan-default-prediction/
 ├── requirements.txt
 ├── run.bat
 └── run.py
-
-
 
 ```
 
